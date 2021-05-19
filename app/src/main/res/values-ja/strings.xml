@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Get off to Pause</string>
+
+    <string name="enable">メディアの制御を開始</string>
+    <string name="disable">メディアの制御を停止</string>
+    <string name="speed">再生と一時停止を切り替える速度</string>
+    <string name="kph">km/h</string>
+</resources>
