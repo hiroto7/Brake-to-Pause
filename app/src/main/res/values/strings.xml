@@ -1,8 +1,11 @@
 <resources>
     <string name="app_name">Get off to Pause</string>
 
-    <string name="enable">Enable</string>
-    <string name="disable">Disable</string>
-    <string name="speed">Speed</string>
+    <string name="enable_media_control">Enable media control</string>
+    <string name="disable_media_control">Disable media control</string>
+    <string name="speed_threshold">Speed</string>
     <string name="kph">km/h</string>
+    <string name="enabled_media_control">Enable media control</string>
+    <string name="playing_media">Playing</string>
+    <string name="paused_media">Paused</string>
 </resources>
