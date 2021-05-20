@@ -50,10 +50,13 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                float speed = textInputEditText.getText().toString().equals("") ? 8 : Float.parseFloat(textInputEditText.getText().toString());
+                float speedThresholdKph = textInputEditText.getText().toString().equals("") ? 8 : Float.parseFloat(textInputEditText.getText().toString());
+
+                float lastSpeedMps = location.getSpeed();
+                float lastSpeedKph = 3.6f * lastSpeedMps;
 
                 Log.d(getString(R.string.app_name), "hasSpeed: " + location.hasSpeed() + ", getSpeed: " + location.getSpeed());
-                if (location.getSpeed() < speed) {
+                if (lastSpeedKph < speedThresholdKph) {
                     audioManager.requestAudioFocus(focusRequest);
                     Log.d(getString(R.string.app_name), "requestAudioFocus");
                 } else {
