@@ -3,9 +3,14 @@
 
     <string name="enable_media_control">Enable media control</string>
     <string name="disable_media_control">Disable media control</string>
-    <string name="speed_threshold">Speed</string>
-    <string name="kph">km/h</string>
     <string name="enabled_media_control">Enable media control</string>
     <string name="playing_media">Playing</string>
     <string name="paused_media">Paused</string>
+
+    <string name="location_title">Pause media as soon as you slow down</string>
+    <string name="location_summary">Use location</string>
+
+    <string name="speed_threshold_title">Speed</string>
+    <string name="speed_threshold_default_value" translatable="false">8</string>
+    <string name="kph">km/h</string>
 </resources>

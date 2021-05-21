@@ -3,9 +3,13 @@
 
     <string name="enable_media_control">メディアの制御を開始</string>
     <string name="disable_media_control">メディアの制御を停止</string>
-    <string name="speed_threshold">再生と一時停止を切り替える速度</string>
-    <string name="kph">km/h</string>
     <string name="enabled_media_control">メディアを制御中</string>
     <string name="playing_media">再生中</string>
     <string name="paused_media">一時停止中</string>
+
+    <string name="location_title">減速したらすぐにメディアを一時停止</string>
+    <string name="location_summary">位置情報を使用します</string>
+
+    <string name="speed_threshold_title">再生と一時停止を切り替える速度</string>
+    <string name="kph">km/h</string>
 </resources>

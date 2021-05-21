@@ -1,0 +1,18 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreference
+        app:defaultValue="true"
+        app:icon="@drawable/ic_baseline_location_on_24"
+        app:key="location"
+        app:summary="@string/location_summary"
+        app:title="@string/location_title" />
+
+    <EditTextPreference
+        app:defaultValue="@string/speed_threshold_default_value"
+        app:dependency="location"
+        app:icon="@drawable/ic_baseline_speed_24"
+        app:key="speed_threshold"
+        app:title="@string/speed_threshold_title"
+        app:useSimpleSummaryProvider="true" />
+
+</PreferenceScreen>
