@@ -3,8 +3,12 @@ package com.example.getofftopause;
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -19,23 +23,31 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.preference.PreferenceManager;
 
+import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.ActivityTransition;
+import com.google.android.gms.location.ActivityTransitionEvent;
+import com.google.android.gms.location.ActivityTransitionRequest;
+import com.google.android.gms.location.ActivityTransitionResult;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.Task;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 public class MediaControlService extends Service {
+
+    private static final String TAG = "MediaControlService";
+
+    private static final String ACTION = BuildConfig.APPLICATION_ID + ".ACTION";
     private static final String CHANNEL_ID = "default";
     private static final int NOTIFICATION_ID = 1;
-
-    private SharedPreferences sharedPreferences;
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private AudioManager audioManager;
-    private AudioFocusRequest focusRequest;
-    private NotificationManager notificationManager;
-    private NotificationCompat.Builder notificationBuilder;
-
     private final LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
@@ -46,25 +58,70 @@ public class MediaControlService extends Service {
                 return;
             }
 
-            float speedThresholdKph = Float.parseFloat(sharedPreferences.getString("speed_threshold", getString(R.string.speed_threshold_default_value)));
+            float speedThresholdKph = Float.parseFloat(sharedPreferences.getString(getString(R.string.speed_threshold_key), getString(R.string.speed_threshold_default_value)));
 
             float lastSpeedMps = location.getSpeed();
             float lastSpeedKph = 3.6f * lastSpeedMps;
 
-            Log.d(getString(R.string.app_name), "hasSpeed: " + location.hasSpeed() + ", getSpeed: " + location.getSpeed());
+            Log.d(TAG, "hasSpeed: " + location.hasSpeed() + ", getSpeed: " + location.getSpeed());
             if (lastSpeedKph < speedThresholdKph) {
-                audioManager.requestAudioFocus(focusRequest);
-                notificationManager.notify(NOTIFICATION_ID, notificationBuilder.setContentText(getText(R.string.paused_media)).build());
-
-                Log.d(getString(R.string.app_name), "requestAudioFocus");
+                requestAudioFocus();
             } else {
-                audioManager.abandonAudioFocusRequest(focusRequest);
-                notificationManager.notify(NOTIFICATION_ID, notificationBuilder.setContentText(getText(R.string.playing_media)).build());
-
-                Log.d(getString(R.string.app_name), "abandonAudioFocusRequest");
+                abandonAudioFocusRequest();
             }
         }
     };
+    private boolean usesLocation;
+    private boolean usesActivityRecognition;
+
+    private SharedPreferences sharedPreferences;
+    private List<Integer> activities;
+    private final BroadcastReceiver transitionsReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (ActivityTransitionResult.hasResult(intent)) {
+
+                ActivityTransitionResult result = ActivityTransitionResult.extractResult(intent);
+
+                for (ActivityTransitionEvent event : result.getTransitionEvents()) {
+                    if (activities.contains(event.getActivityType()) && event.getTransitionType() == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
+                        requestLocationUpdates();
+                        if (!usesLocation) {
+                            abandonAudioFocusRequest();
+                        }
+
+                        Log.d(TAG, "requestLocationUpdates()");
+                    } else {
+                        removeLocationUpdates();
+                        requestAudioFocus();
+
+                        Log.d(TAG, "removeLocationUpdates()");
+                    }
+                }
+            }
+        }
+    };
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private AudioManager audioManager;
+    private AudioFocusRequest focusRequest;
+    private NotificationManager notificationManager;
+    private NotificationCompat.Builder notificationBuilder;
+    private PendingIntent pendingIntent;
+    private ActivityRecognitionClient activityRecognitionClient;
+
+    private void requestAudioFocus() {
+        audioManager.requestAudioFocus(focusRequest);
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.setContentText(getText(R.string.paused_media)).build());
+
+        Log.d(TAG, "requestAudioFocus()");
+    }
+
+    private void abandonAudioFocusRequest() {
+        audioManager.abandonAudioFocusRequest(focusRequest);
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.setContentText(getText(R.string.playing_media)).build());
+
+        Log.d(TAG, "abandonAudioFocusRequest()");
+    }
 
     private void createNotificationChannel() {
         NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "default", NotificationManager.IMPORTANCE_LOW);
@@ -72,6 +129,10 @@ public class MediaControlService extends Service {
     }
 
     private void requestLocationUpdates() {
+        if (!usesLocation) {
+            return;
+        }
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -89,11 +150,61 @@ public class MediaControlService extends Service {
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
+    private void removeLocationUpdates() {
+        if (!usesLocation) {
+            return;
+        }
+
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+    }
+
+    private void requestActivityTransitionUpdates() {
+        if (!usesActivityRecognition) {
+            return;
+        }
+
+        List<ActivityTransition> transitions = Arrays.asList(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.STILL)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        .build(),
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.IN_VEHICLE)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        .build(),
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.ON_BICYCLE)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        .build(),
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.RUNNING)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        .build(),
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.WALKING)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        .build());
+
+        ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
+
+        Task<Void> task = activityRecognitionClient.requestActivityTransitionUpdates(request, pendingIntent);
+        task.addOnSuccessListener(unused -> Log.d(TAG, "onSuccess()"));
+        task.addOnFailureListener(e -> Log.d(TAG, "onFailure(): " + e));
+    }
+
+    private void removeActivityTransitionUpdates() {
+        if (!usesActivityRecognition) {
+            return;
+        }
+
+        Task<Void> task = activityRecognitionClient.removeActivityTransitionUpdates(pendingIntent);
+        task.addOnSuccessListener(unused -> Log.d(TAG, "onSuccess()"));
+        task.addOnFailureListener(e -> Log.d(TAG, "onFailure(): " + e));
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
-
-        Log.d(getString(R.string.app_name), "onCreate");
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -103,17 +214,20 @@ public class MediaControlService extends Service {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         notificationManager = getSystemService(NotificationManager.class);
-        createNotificationChannel();
+
+        Intent intent = new Intent(ACTION);
+        pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        activityRecognitionClient = ActivityRecognition.getClient(this);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
-        Log.d(getString(R.string.app_name), "onStartCommand");
+        usesLocation = sharedPreferences.getBoolean(getString(R.string.location_key), true);
+        usesActivityRecognition = sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true);
 
-        // PendingIntent pendingIntent = PendingIntent.getActivity(context);
-
+        createNotificationChannel();
         notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_pedal_bike_24)
                 .setContentTitle(getString(R.string.enabled_media_control))
@@ -122,6 +236,23 @@ public class MediaControlService extends Service {
 
         requestLocationUpdates();
 
+        registerReceiver(transitionsReceiver, new IntentFilter(ACTION));
+        requestActivityTransitionUpdates();
+
+        activities = new LinkedList<>();
+        if (sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true)) {
+            activities.add(DetectedActivity.IN_VEHICLE);
+        }
+        if (sharedPreferences.getBoolean(getString(R.string.on_bicycle_key), true)) {
+            activities.add(DetectedActivity.ON_BICYCLE);
+        }
+        if (sharedPreferences.getBoolean(getString(R.string.running_key), false)) {
+            activities.add(DetectedActivity.RUNNING);
+        }
+        if (sharedPreferences.getBoolean(getString(R.string.walking_key), false)) {
+            activities.add(DetectedActivity.WALKING);
+        }
+
         return START_NOT_STICKY;
     }
 
@@ -129,7 +260,10 @@ public class MediaControlService extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+        removeLocationUpdates();
+
+        unregisterReceiver(transitionsReceiver);
+        removeActivityTransitionUpdates();
     }
 
     @Override

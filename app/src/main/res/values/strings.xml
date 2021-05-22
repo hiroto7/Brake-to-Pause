@@ -7,9 +7,29 @@
     <string name="playing_media">Playing</string>
     <string name="paused_media">Paused</string>
 
-    <string name="location_title">Pause media as soon as you slow down</string>
-    <string name="location_summary">Use location</string>
+    <string name="activity_recognition_header">Control depending on your physical activity</string>
 
+    <string name="activity_recognition_key" translatable="false">activity_recognition</string>
+    <string name="activity_recognition_title">Power saving</string>
+    <string name="activity_recognition_summary">Accesses your physical activity</string>
+
+    <string name="in_vehicle_key" translatable="false">in_vehicle</string>
+    <string name="on_bicycle_key" translatable="false">on_bicycle</string>
+    <string name="running_key" translatable="false">running</string>
+    <string name="walking_key" translatable="false">walking</string>
+
+    <string name="in_vehicle_title">In vehicle</string>
+    <string name="on_bicycle_title">On bicycle</string>
+    <string name="running_title">Running</string>
+    <string name="walking_title">Walking</string>
+
+    <string name="location_header">Control depending on the speed</string>
+
+    <string name="location_key" translatable="false">location</string>
+    <string name="location_title">Pause media as soon as you slow down</string>
+    <string name="location_summary">Accesses this device\'s location</string>
+
+    <string name="speed_threshold_key" translatable="false">speed_threshold</string>
     <string name="speed_threshold_title">Speed</string>
     <string name="speed_threshold_default_value" translatable="false">8</string>
     <string name="kph">km/h</string>

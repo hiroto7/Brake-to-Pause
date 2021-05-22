@@ -7,8 +7,19 @@
     <string name="playing_media">再生中</string>
     <string name="paused_media">一時停止中</string>
 
+    <string name="activity_recognition_header">身体活動に応じた制御</string>
+
+    <string name="activity_recognition_title">省電力</string>
+    <string name="activity_recognition_summary">選択したアクティビティの間だけ位置情報を取得します。身体活動データにアクセスします</string>
+
+    <string name="in_vehicle_title">車内</string>
+    <string name="on_bicycle_title">自転車</string>
+    <string name="running_title">ランニング</string>
+    <string name="walking_title">ウォーキング</string>
+
+    <string name="location_header">速度に応じた制御</string>
     <string name="location_title">減速したらすぐにメディアを一時停止</string>
-    <string name="location_summary">位置情報を使用します</string>
+    <string name="location_summary">位置情報にアクセスします</string>
 
     <string name="speed_threshold_title">再生と一時停止を切り替える速度</string>
     <string name="kph">km/h</string>
