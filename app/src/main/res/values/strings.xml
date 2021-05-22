@@ -11,7 +11,8 @@
 
     <string name="activity_recognition_key" translatable="false">activity_recognition</string>
     <string name="activity_recognition_title">Power saving</string>
-    <string name="activity_recognition_summary">Accesses your physical activity</string>
+    <string name="activity_recognition_summary_with_location">Accesses this device\'s location only during one of the selected activities, otherwise pause the media. Accesses your physical activity</string>
+    <string name="activity_recognition_summary_without_location">Plays media only during one of the selected activities. Accesses your physical activity</string>
 
     <string name="in_vehicle_key" translatable="false">in_vehicle</string>
     <string name="on_bicycle_key" translatable="false">on_bicycle</string>

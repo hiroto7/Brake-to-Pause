@@ -1,7 +1,6 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory android:title="@string/location_header">
+    <PreferenceCategory app:title="@string/location_header">
 
         <SwitchPreference
             app:defaultValue="true"
@@ -17,38 +16,38 @@
             app:title="@string/speed_threshold_title"
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/activity_recognition_header">
+    <PreferenceCategory app:title="@string/activity_recognition_header">
 
         <SwitchPreference
-            android:defaultValue="true"
-            android:key="@string/activity_recognition_key"
-            android:summary="@string/activity_recognition_summary"
-            android:title="@string/activity_recognition_title"
-            app:icon="@drawable/ic_baseline_battery_full_24" />
+            app:defaultValue="true"
+            app:icon="@drawable/ic_baseline_battery_full_24"
+            app:key="@string/activity_recognition_key"
+            app:summary="@string/activity_recognition_summary_with_location"
+            app:title="@string/activity_recognition_title" />
         <CheckBoxPreference
-            android:defaultValue="true"
-            android:dependency="@string/activity_recognition_key"
-            android:icon="@drawable/ic_baseline_directions_car_24"
-            android:key="@string/in_vehicle_key"
-            android:title="@string/in_vehicle_title" />
+            app:defaultValue="true"
+            app:dependency="@string/activity_recognition_key"
+            app:icon="@drawable/ic_baseline_directions_car_24"
+            app:key="@string/in_vehicle_key"
+            app:title="@string/in_vehicle_title" />
         <CheckBoxPreference
-            android:defaultValue="true"
-            android:dependency="@string/activity_recognition_key"
-            android:icon="@drawable/ic_baseline_pedal_bike_24"
-            android:key="@string/on_bicycle_key"
-            android:title="@string/on_bicycle_title" />
+            app:defaultValue="true"
+            app:dependency="@string/activity_recognition_key"
+            app:icon="@drawable/ic_baseline_pedal_bike_24"
+            app:key="@string/on_bicycle_key"
+            app:title="@string/on_bicycle_title" />
         <CheckBoxPreference
-            android:defaultValue="false"
-            android:dependency="@string/activity_recognition_key"
-            android:icon="@drawable/ic_baseline_directions_run_24"
-            android:key="@string/running_key"
-            android:title="@string/running_title" />
+            app:defaultValue="false"
+            app:dependency="@string/activity_recognition_key"
+            app:icon="@drawable/ic_baseline_directions_run_24"
+            app:key="@string/running_key"
+            app:title="@string/running_title" />
         <CheckBoxPreference
-            android:defaultValue="false"
-            android:dependency="@string/activity_recognition_key"
-            android:icon="@drawable/ic_baseline_directions_walk_24"
-            android:key="@string/walking_key"
-            android:title="@string/walking_title" />
+            app:defaultValue="false"
+            app:dependency="@string/activity_recognition_key"
+            app:icon="@drawable/ic_baseline_directions_walk_24"
+            app:key="@string/walking_key"
+            app:title="@string/walking_title" />
     </PreferenceCategory>
 
 </PreferenceScreen>
