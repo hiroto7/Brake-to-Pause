@@ -9,9 +9,10 @@
 
     <string name="activity_recognition_header">身体活動に応じた制御</string>
 
-    <string name="activity_recognition_title">省電力</string>
-    <string name="activity_recognition_summary_with_location">選択したアクティビティの間だけ位置情報へアクセスし、そうでないときはメディアを一時停止します。身体活動データにアクセスします</string>
-    <string name="activity_recognition_summary_without_location">選択したアクティビティの間だけメディアを再生します。身体活動データにアクセスします</string>
+    <string name="activity_recognition_title_with_location">特定のアクティビティ中のみ位置情報へアクセス</string>
+    <string name="activity_recognition_title_without_location">特定のアクティビティ中のみメディアを再生</string>
+    <string name="activity_recognition_summary_with_location">それ以外のときはメディアを一時停止します。身体活動データにアクセスします（省電力）</string>
+    <string name="activity_recognition_summary_without_location">身体活動データにアクセスします（省電力）</string>
 
     <string name="in_vehicle_title">車内</string>
     <string name="on_bicycle_title">自転車</string>

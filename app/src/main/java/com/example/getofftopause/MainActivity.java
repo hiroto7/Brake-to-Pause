@@ -73,11 +73,13 @@ public class MainActivity extends AppCompatActivity {
                 });
         private SharedPreferences sharedPreferences;
 
-        private void setSummary() {
+        private void updateTitleAndSummary() {
             if (sharedPreferences.getBoolean(getString(R.string.location_key), false)) {
-                activityRecognitionPreference.setSummary(getString(R.string.activity_recognition_summary_with_location));
+                activityRecognitionPreference.setTitle(R.string.activity_recognition_title_with_location);
+                activityRecognitionPreference.setSummary(R.string.activity_recognition_summary_with_location);
             } else {
-                activityRecognitionPreference.setSummary(getString(R.string.activity_recognition_summary_without_location));
+                activityRecognitionPreference.setTitle(R.string.activity_recognition_title_without_location);
+                activityRecognitionPreference.setSummary(R.string.activity_recognition_summary_without_location);
             }
         }
 
@@ -94,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                 speedPreference.setOnBindEditTextListener(
                         editText -> {
                             editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-                            editText.setHint(getString(R.string.speed_threshold_default_value));
+                            editText.setHint(R.string.speed_threshold_default_value);
                         });
 
                 speedPreference.setSummaryProvider((Preference.SummaryProvider<EditTextPreference>) preference -> preference.getText() + " " + getString(R.string.kph));
@@ -138,14 +140,14 @@ public class MainActivity extends AppCompatActivity {
                     return true;
                 });
 
-                setSummary();
+                updateTitleAndSummary();
             }
         }
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             if (key.equals(getString(R.string.location_key))) {
-                setSummary();
+                updateTitleAndSummary();
             }
         }
     }
