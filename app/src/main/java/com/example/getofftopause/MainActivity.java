@@ -174,6 +174,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            if (!isAdded()) {
+                return;
+            }
+
             if (key.equals(getString(R.string.location_key))) {
                 updateTitleAndSummary();
             }
