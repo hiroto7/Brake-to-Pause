@@ -61,6 +61,15 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (enabled) {
+            stopService(intent);
+        }
+    }
+
+    @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(getString(R.string.location_key)) || key.equals(getString(R.string.activity_recognition_key))) {
             updateButtonEnabled();
