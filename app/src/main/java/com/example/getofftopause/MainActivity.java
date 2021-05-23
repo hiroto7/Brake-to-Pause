@@ -21,6 +21,9 @@ import androidx.preference.SwitchPreference;
 
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener, View.OnClickListener {
 
     private static final String TAG = "MainActivity";
@@ -31,10 +34,41 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private SharedPreferences sharedPreferences;
     private Intent intent;
 
+    private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                if (result.containsValue(false)) {
+                    return;
+                }
+
+                startMediaControlService();
+            });
+
     private void updateButtonEnabled() {
         button.setEnabled(
                 sharedPreferences.getBoolean(getString(R.string.location_key), true) ||
                         sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true));
+    }
+
+    private void startMediaControlService() {
+        enabled = true;
+        button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_stop_24));
+        button.setText(R.string.disable_media_control);
+
+        SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
+        settingsFragment.getPreferenceScreen().setEnabled(false);
+
+        startForegroundService(intent);
+    }
+
+    private void stopMediaControlService() {
+        enabled = false;
+        button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_music_note_24));
+        button.setText(R.string.enable_media_control);
+
+        SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
+        settingsFragment.getPreferenceScreen().setEnabled(true);
+
+        stopService(intent);
     }
 
     @Override
@@ -65,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         super.onDestroy();
 
         if (enabled) {
-            stopService(intent);
+            stopMediaControlService();
         }
     }
 
@@ -79,38 +113,41 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Override
     public void onClick(View v) {
         if (enabled) {
-            enabled = false;
-            button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_music_note_24));
-            button.setText(R.string.enable_media_control);
-
-            stopService(intent);
+            stopMediaControlService();
         } else {
-            enabled = true;
-            button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_stop_24));
-            button.setText(R.string.disable_media_control);
+            List<String> requestedPermissions = new ArrayList<>();
 
-            startForegroundService(intent);
+            if (sharedPreferences.getBoolean(getString(R.string.location_key), true) &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                requestedPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+                requestedPermissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
+
+            if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true) &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+                requestedPermissions.add(Manifest.permission.ACTIVITY_RECOGNITION);
+            }
+
+            if (!requestedPermissions.isEmpty()) {
+                requestPermissionsLauncher.launch(requestedPermissions.toArray(new String[0]));
+                return;
+            }
+
+            startMediaControlService();
         }
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
         private SharedPreferences sharedPreferences;
-        private SwitchPreference locationPreference;
-        private final ActivityResultLauncher<String[]> requestLocationPermissionsLauncher =
-                registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-                    if (result.containsValue(true)) {
-                        locationPreference.setChecked(true);
-                    }
-                });
-        private SwitchPreference activityRecognitionPreference;
-        private final ActivityResultLauncher<String> requestActivityRecognitionPermissionLauncher =
-                registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                    if (isGranted) {
-                        activityRecognitionPreference.setChecked(true);
-                    }
-                });
 
         private void updateTitleAndSummary() {
+            SwitchPreference activityRecognitionPreference = findPreference(getString(R.string.activity_recognition_key));
+
+            if (activityRecognitionPreference == null) {
+                return;
+            }
+
             if (sharedPreferences.getBoolean(getString(R.string.location_key), true)) {
                 activityRecognitionPreference.setTitle(R.string.activity_recognition_title_with_location);
                 activityRecognitionPreference.setSummary(R.string.activity_recognition_summary_with_location);
@@ -126,8 +163,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
             sharedPreferences = getPreferenceManager().getSharedPreferences();
             EditTextPreference speedPreference = findPreference(getString(R.string.speed_threshold_key));
-            locationPreference = findPreference(getString(R.string.location_key));
-            activityRecognitionPreference = findPreference(getString(R.string.activity_recognition_key));
 
             if (speedPreference != null) {
                 speedPreference.setOnBindEditTextListener(
@@ -140,45 +175,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 speedPreference.setOnPreferenceChangeListener((preference, newValue) -> !newValue.equals(""));
             }
 
-            if (locationPreference != null) {
-                if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    locationPreference.setChecked(false);
-                }
-
-                locationPreference.setOnPreferenceChangeListener((preference, newValue) -> {
-                    if (newValue.equals(true) &&
-                            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-                        requestLocationPermissionsLauncher.launch(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION});
-                        return false;
-                    }
-
-                    return true;
-                });
-
-                sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-            }
-
-            if (activityRecognitionPreference != null) {
-                if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-                    activityRecognitionPreference.setChecked(false);
-                }
-
-                activityRecognitionPreference.setOnPreferenceChangeListener((preference, newValue) -> {
-                    if (newValue.equals(true) &&
-                            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-
-                        requestActivityRecognitionPermissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION);
-                        return false;
-                    }
-
-                    return true;
-                });
-
-                updateTitleAndSummary();
-            }
+            sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+            updateTitleAndSummary();
         }
 
         @Override
