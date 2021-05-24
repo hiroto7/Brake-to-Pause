@@ -22,6 +22,7 @@ import androidx.preference.SwitchPreference;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener, View.OnClickListener {
@@ -44,9 +45,15 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             });
 
     private void updateButtonEnabled() {
-        button.setEnabled(
-                sharedPreferences.getBoolean(getString(R.string.location_key), true) ||
-                        sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true));
+        if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
+            button.setEnabled(
+                    sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true) ||
+                            sharedPreferences.getBoolean(getString(R.string.on_bicycle_key), true) ||
+                            sharedPreferences.getBoolean(getString(R.string.running_key), false) ||
+                            sharedPreferences.getBoolean(getString(R.string.walking_key), false));
+        } else {
+            button.setEnabled(sharedPreferences.getBoolean(getString(R.string.location_key), true));
+        }
     }
 
     private void startMediaControlService() {
@@ -109,7 +116,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(getString(R.string.location_key)) || key.equals(getString(R.string.activity_recognition_key))) {
+        if (Arrays.asList(
+                getString(R.string.location_key),
+                getString(R.string.activity_recognition_key),
+                getString(R.string.in_vehicle_key),
+                getString(R.string.on_bicycle_key),
+                getString(R.string.running_key),
+                getString(R.string.walking_key)).contains(key)) {
             updateButtonEnabled();
         }
     }
