@@ -55,7 +55,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         button.setText(R.string.disable_media_control);
 
         SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
-        settingsFragment.getPreferenceScreen().setEnabled(false);
+        if (settingsFragment != null) {
+            settingsFragment.getPreferenceScreen().setEnabled(false);
+        }
 
         startForegroundService(intent);
     }
@@ -66,7 +68,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         button.setText(R.string.enable_media_control);
 
         SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
-        settingsFragment.getPreferenceScreen().setEnabled(true);
+        if (settingsFragment != null) {
+            settingsFragment.getPreferenceScreen().setEnabled(true);
+        }
 
         stopService(intent);
     }
