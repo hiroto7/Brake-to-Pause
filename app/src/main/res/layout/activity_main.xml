@@ -20,6 +20,7 @@
         android:clickable="true"
         android:text="@string/enable_media_control"
         app:icon="@drawable/ic_baseline_music_note_24"
+        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
         app:srcCompat="@drawable/ic_baseline_pedal_bike_24" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
