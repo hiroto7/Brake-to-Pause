@@ -1,10 +1,13 @@
 package com.example.getofftopause;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.text.InputType;
 import android.view.View;
 
@@ -46,6 +49,24 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 startMediaControlService();
             });
 
+    private final ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MediaControlService.MediaControlBinder binder = (MediaControlService.MediaControlBinder) service;
+            MediaControlService mediaControlService = binder.getService();
+
+            enabled = mediaControlService.isEnabled();
+            updateButtonTextAndIcon();
+
+            unbindService(connection);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
     private void updateButtonEnabled() {
         if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
             button.setEnabled(
@@ -58,30 +79,39 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     }
 
-    private void startMediaControlService() {
-        enabled = true;
-        button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_stop_24));
-        button.setText(R.string.disable_media_control);
+    private void updateButtonTextAndIcon() {
+        if (enabled) {
+            button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_stop_24));
+            button.setText(R.string.disable_media_control);
 
-        SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
-        if (settingsFragment != null) {
-            settingsFragment.getPreferenceScreen().setEnabled(false);
+            SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
+            if (settingsFragment != null) {
+                settingsFragment.getPreferenceScreen().setEnabled(false);
+            }
+        } else {
+            button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_music_note_24));
+            button.setText(R.string.enable_media_control);
+
+            SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
+            if (settingsFragment != null) {
+                settingsFragment.getPreferenceScreen().setEnabled(true);
+            }
         }
+    }
 
+    private void startMediaControlService() {
         startForegroundService(intent);
+
+        enabled = true;
+        updateButtonTextAndIcon();
     }
 
     private void stopMediaControlService() {
-        enabled = false;
-        button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_music_note_24));
-        button.setText(R.string.enable_media_control);
-
-        SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
-        if (settingsFragment != null) {
-            settingsFragment.getPreferenceScreen().setEnabled(true);
-        }
-
         stopService(intent);
+
+        enabled = false;
+        updateButtonTextAndIcon();
+
     }
 
     @Override
@@ -103,17 +133,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         button.setOnClickListener(this);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
-        enabled = false;
+        bindService(intent, connection, BIND_AUTO_CREATE);
         updateButtonEnabled();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        if (enabled) {
-            stopMediaControlService();
-        }
     }
 
     @Override

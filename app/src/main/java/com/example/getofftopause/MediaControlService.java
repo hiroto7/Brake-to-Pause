@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.os.Binder;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
@@ -46,16 +47,18 @@ public class MediaControlService extends Service {
     private static final String TAG = "MediaControlService";
     private static final String ACTION = MediaControlService.class.getCanonicalName() + ".ACTION";
     private static final String CHANNEL_ID = "default";
-
-    private boolean usesLocation;
-    private boolean usesActivityRecognition;
-    private boolean hasAudioFocus;
-
+    private final AudioFocusRequest focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT).build();
+    private final IBinder binder = new MediaControlBinder();
     private SharedPreferences sharedPreferences;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private AudioManager audioManager;
-    private AudioFocusRequest focusRequest;
     private NotificationManager notificationManager;
+    private ActivityRecognitionClient activityRecognitionClient;
+    private boolean enabled;
+    private boolean usesLocation;
+    private boolean usesActivityRecognition;
+    private boolean hasAudioFocus;
+    private List<Integer> selectedActivities;
     private NotificationCompat.Builder notificationBuilder;
     private final LocationCallback locationCallback = new LocationCallback() {
         @Override
@@ -80,7 +83,6 @@ public class MediaControlService extends Service {
             }
         }
     };
-    private List<Integer> selectedActivities;
     private final BroadcastReceiver transitionsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -107,7 +109,10 @@ public class MediaControlService extends Service {
         }
     };
     private PendingIntent pendingIntent;
-    private ActivityRecognitionClient activityRecognitionClient;
+
+    public boolean isEnabled() {
+        return enabled;
+    }
 
     private void requestAudioFocus() {
         if (hasAudioFocus) {
@@ -148,13 +153,6 @@ public class MediaControlService extends Service {
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
 
@@ -218,18 +216,16 @@ public class MediaControlService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
         audioManager = getSystemService(AudioManager.class);
-        focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT).build();
-
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-
         notificationManager = getSystemService(NotificationManager.class);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        activityRecognitionClient = ActivityRecognition.getClient(this);
 
         Intent intent = new Intent(ACTION);
         pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        activityRecognitionClient = ActivityRecognition.getClient(this);
+
+        enabled = false;
     }
 
     @Override
@@ -240,6 +236,7 @@ public class MediaControlService extends Service {
         usesActivityRecognition = sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true);
 
         hasAudioFocus = false;
+        enabled = true;
 
         createNotificationChannel();
         notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -274,11 +271,18 @@ public class MediaControlService extends Service {
 
         removeLocationUpdates();
         removeActivityTransitionUpdates();
+
+        enabled = false;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+        return binder;
+    }
+
+    public class MediaControlBinder extends Binder {
+        public MediaControlService getService() {
+            return MediaControlService.this;
+        }
     }
 }
