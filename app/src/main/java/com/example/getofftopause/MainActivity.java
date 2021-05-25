@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                button.setEnabled(true);
+
                 if (result.containsValue(false)) {
                     return;
                 }
@@ -147,7 +149,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             }
 
             if (!requestedPermissions.isEmpty()) {
+                button.setEnabled(false);
                 requestPermissionsLauncher.launch(requestedPermissions.toArray(new String[0]));
+
                 return;
             }
 
