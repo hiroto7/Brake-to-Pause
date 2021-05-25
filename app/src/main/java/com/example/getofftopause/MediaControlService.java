@@ -40,6 +40,7 @@ import com.google.android.gms.location.LocationServices;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MediaControlService extends Service {
 
@@ -177,27 +178,18 @@ public class MediaControlService extends Service {
 
         registerReceiver(transitionsReceiver, new IntentFilter(ACTION));
 
-        List<ActivityTransition> transitions = Arrays.asList(
-                new ActivityTransition.Builder()
-                        .setActivityType(DetectedActivity.STILL)
+        List<Integer> activityTypes = Arrays.asList(
+                DetectedActivity.STILL,
+                DetectedActivity.IN_VEHICLE,
+                DetectedActivity.ON_BICYCLE,
+                DetectedActivity.RUNNING,
+                DetectedActivity.WALKING);
+        List<ActivityTransition> transitions = activityTypes.stream()
+                .map(activityType -> new ActivityTransition.Builder()
+                        .setActivityType(activityType)
                         .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                        .build(),
-                new ActivityTransition.Builder()
-                        .setActivityType(DetectedActivity.IN_VEHICLE)
-                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                        .build(),
-                new ActivityTransition.Builder()
-                        .setActivityType(DetectedActivity.ON_BICYCLE)
-                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                        .build(),
-                new ActivityTransition.Builder()
-                        .setActivityType(DetectedActivity.RUNNING)
-                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                        .build(),
-                new ActivityTransition.Builder()
-                        .setActivityType(DetectedActivity.WALKING)
-                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                        .build());
+                        .build())
+                .collect(Collectors.toList());
 
         ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
         activityRecognitionClient.requestActivityTransitionUpdates(request, pendingIntent);
