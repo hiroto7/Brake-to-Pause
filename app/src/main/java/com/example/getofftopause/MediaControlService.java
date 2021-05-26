@@ -122,7 +122,7 @@ public class MediaControlService extends Service {
 
         audioManager.requestAudioFocus(focusRequest);
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder
-                .setContentText(getText(R.string.paused_media))
+                .setContentTitle(getText(R.string.paused_media))
                 .setSmallIcon(R.drawable.ic_baseline_music_off_24)
                 .build());
 
@@ -136,7 +136,7 @@ public class MediaControlService extends Service {
 
         audioManager.abandonAudioFocusRequest(focusRequest);
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder
-                .setContentText(getText(R.string.playing_media))
+                .setContentTitle(getText(R.string.playing_media))
                 .setSmallIcon(R.drawable.ic_baseline_music_note_24)
                 .build());
 

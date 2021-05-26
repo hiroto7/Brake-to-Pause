@@ -6,8 +6,8 @@
     <string name="enable_media_control">Start media control</string>
     <string name="disable_media_control">Stop media control</string>
     <string name="enabled_media_control">Controlling media</string>
-    <string name="playing_media">Playing</string>
-    <string name="paused_media">Paused</string>
+    <string name="playing_media">Playing media</string>
+    <string name="paused_media">Pausing media</string>
 
     <string name="activity_recognition_header">Control depending on your physical activity</string>
 
