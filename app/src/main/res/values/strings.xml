@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Get off to Pause</string>
 
+    <string name="permission_denied">Permission denied</string>
+
     <string name="enable_media_control">Start media control</string>
     <string name="disable_media_control">Stop media control</string>
     <string name="enabled_media_control">Controlling media</string>

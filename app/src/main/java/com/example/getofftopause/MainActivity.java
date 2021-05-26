@@ -23,6 +23,7 @@ import androidx.preference.PreferenceManager;
 import androidx.preference.SwitchPreference;
 
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 button.setEnabled(true);
 
                 if (result.containsValue(false)) {
+                    Snackbar.make(button, getString(R.string.permission_denied), Snackbar.LENGTH_SHORT).setAnchorView(button).show();
                     return;
                 }
 
