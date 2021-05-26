@@ -143,11 +143,6 @@ public class MediaControlService extends Service {
         hasAudioFocus = false;
     }
 
-    private void createNotificationChannel() {
-        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "default", NotificationManager.IMPORTANCE_LOW);
-        notificationManager.createNotificationChannel(channel);
-    }
-
     private void requestLocationUpdates() {
         if (!usesLocation) {
             return;
@@ -169,6 +164,11 @@ public class MediaControlService extends Service {
         }
 
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+    }
+
+    private void createNotificationChannel() {
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, getString(R.string.media_control), NotificationManager.IMPORTANCE_LOW);
+        notificationManager.createNotificationChannel(channel);
     }
 
     private void requestActivityTransitionUpdates() {
