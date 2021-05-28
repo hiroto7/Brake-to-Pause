@@ -38,7 +38,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private ExtendedFloatingActionButton button;
     private SharedPreferences sharedPreferences;
     private Intent intent;
-
     private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                 button.setEnabled(true);
@@ -48,19 +47,17 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     return;
                 }
 
-                startMediaControlService();
+                startForegroundService(intent);
             });
-
+    private MediaControlService mediaControlService;
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MediaControlService.MediaControlBinder binder = (MediaControlService.MediaControlBinder) service;
-            MediaControlService mediaControlService = binder.getService();
+            mediaControlService = binder.getService();
 
-            enabled = mediaControlService.isEnabled();
-            updateButtonTextAndIcon();
-
-            unbindService(connection);
+            setEnabled(mediaControlService.isEnabled());
+            mediaControlService.setOnMediaControlServiceSwitchListener(MainActivity.this::setEnabled);
         }
 
         @Override
@@ -68,6 +65,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         }
     };
+
+    private void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        updateButtonTextAndIcon();
+    }
 
     private void updateButtonEnabled() {
         if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
@@ -101,19 +103,18 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     }
 
-    private void startMediaControlService() {
-        startForegroundService(intent);
+    @Override
+    protected void onPause() {
+        super.onPause();
 
-        enabled = true;
-        updateButtonTextAndIcon();
+        unbindService(connection);
     }
 
-    private void stopMediaControlService() {
-        stopService(intent);
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-        enabled = false;
-        updateButtonTextAndIcon();
-
+        bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -135,13 +136,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         button.setOnClickListener(this);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
-        bindService(intent, connection, BIND_AUTO_CREATE);
         updateButtonEnabled();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     @Override
@@ -160,7 +155,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Override
     public void onClick(View v) {
         if (enabled) {
-            stopMediaControlService();
+            mediaControlService.disable();
+            stopService(intent);
         } else {
             List<String> requestedPermissions = new ArrayList<>();
 
@@ -183,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 return;
             }
 
-            startMediaControlService();
+            startForegroundService(intent);
         }
     }
 

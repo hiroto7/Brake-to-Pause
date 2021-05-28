@@ -17,7 +17,6 @@ import android.media.AudioManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -46,7 +45,8 @@ public class MediaControlService extends Service {
 
     private static final int NOTIFICATION_ID = 1;
     private static final String TAG = "MediaControlService";
-    private static final String ACTION = MediaControlService.class.getCanonicalName() + ".ACTION";
+    private static final String ACTION_TRANSITION = MediaControlService.class.getCanonicalName() + ".ACTION_TRANSITION";
+    private static final String ACTION_DISABLE = MediaControlService.class.getCanonicalName() + ".ACTION_DISABLE";
     private static final String CHANNEL_ID = "default";
     private final AudioFocusRequest focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT).build();
     private final IBinder binder = new MediaControlBinder();
@@ -76,7 +76,6 @@ public class MediaControlService extends Service {
             float lastSpeedMps = location.getSpeed();
             float lastSpeedKph = 3.6f * lastSpeedMps;
 
-            Log.d(TAG, "hasSpeed: " + location.hasSpeed() + ", getSpeed: " + location.getSpeed());
             if (lastSpeedKph < speedThresholdKph) {
                 requestAudioFocus();
             } else {
@@ -97,22 +96,36 @@ public class MediaControlService extends Service {
                         if (!usesLocation) {
                             abandonAudioFocusRequest();
                         }
-
-                        Log.d(TAG, "requestLocationUpdates()");
                     } else {
                         removeLocationUpdates();
                         requestAudioFocus();
-
-                        Log.d(TAG, "removeLocationUpdates()");
                     }
                 }
             }
         }
     };
-    private PendingIntent pendingIntent;
+    private PendingIntent transitionPendingIntent;
+    private OnMediaControlServiceSwitchListener listener;
+    private final BroadcastReceiver disableReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            disable();
+            stopSelf();
+        }
+    };
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    private void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+
+        if (this.listener == null) {
+            return;
+        }
+
+        this.listener.onMediaControlServiceSwitched(enabled);
     }
 
     private void requestAudioFocus() {
@@ -176,7 +189,7 @@ public class MediaControlService extends Service {
             return;
         }
 
-        registerReceiver(transitionsReceiver, new IntentFilter(ACTION));
+        registerReceiver(transitionsReceiver, new IntentFilter(ACTION_TRANSITION));
 
         List<Integer> activityTypes = Arrays.asList(
                 DetectedActivity.STILL,
@@ -192,7 +205,7 @@ public class MediaControlService extends Service {
                 .collect(Collectors.toList());
 
         ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
-        activityRecognitionClient.requestActivityTransitionUpdates(request, pendingIntent);
+        activityRecognitionClient.requestActivityTransitionUpdates(request, transitionPendingIntent);
     }
 
     private void removeActivityTransitionUpdates() {
@@ -201,7 +214,22 @@ public class MediaControlService extends Service {
         }
 
         unregisterReceiver(transitionsReceiver);
-        activityRecognitionClient.removeActivityTransitionUpdates(pendingIntent);
+        activityRecognitionClient.removeActivityTransitionUpdates(transitionPendingIntent);
+    }
+
+    public void setOnMediaControlServiceSwitchListener(OnMediaControlServiceSwitchListener listener) {
+        this.listener = listener;
+    }
+
+    public void disable() {
+        unregisterReceiver(disableReceiver);
+
+        removeLocationUpdates();
+        removeActivityTransitionUpdates();
+
+        stopForeground(true);
+
+        setEnabled(false);
     }
 
     @Override
@@ -214,8 +242,8 @@ public class MediaControlService extends Service {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         activityRecognitionClient = ActivityRecognition.getClient(this);
 
-        Intent intent = new Intent(ACTION);
-        pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent = new Intent(ACTION_TRANSITION);
+        transitionPendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         enabled = false;
     }
@@ -224,18 +252,28 @@ public class MediaControlService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
+        createNotificationChannel();
+
+        Intent mainIntent = new Intent(this, MainActivity.class);
+        PendingIntent mainPendingIntent = PendingIntent.getActivity(this, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent disableIntent = new Intent(ACTION_DISABLE);
+        PendingIntent disablePendingIntent = PendingIntent.getBroadcast(this, 0, disableIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_baseline_music_note_24)
+                .setContentTitle(getString(R.string.enabled_media_control))
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setContentIntent(mainPendingIntent)
+                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.disable_media_control), disablePendingIntent);
+        startForeground(NOTIFICATION_ID, notificationBuilder.build());
+
+        registerReceiver(disableReceiver, new IntentFilter(ACTION_DISABLE));
+
         usesLocation = sharedPreferences.getBoolean(getString(R.string.location_key), true);
         usesActivityRecognition = sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true);
 
         hasAudioFocus = false;
-        enabled = true;
-
-        createNotificationChannel();
-        notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_baseline_music_note_24)
-                .setContentTitle(getString(R.string.enabled_media_control))
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-        startForeground(NOTIFICATION_ID, notificationBuilder.build());
 
         selectedActivities = new LinkedList<>();
         if (sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true)) {
@@ -254,22 +292,29 @@ public class MediaControlService extends Service {
         requestLocationUpdates();
         requestActivityTransitionUpdates();
 
-        return START_NOT_STICKY;
+        setEnabled(true);
+
+        return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        removeLocationUpdates();
-        removeActivityTransitionUpdates();
+        if (!enabled) {
+            return;
+        }
 
-        enabled = false;
+        disable();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
+    }
+
+    public interface OnMediaControlServiceSwitchListener {
+        void onMediaControlServiceSwitched(boolean enabled);
     }
 
     public class MediaControlBinder extends Binder {
