@@ -41,14 +41,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MediaControlService extends Service {
+public class MediaControlService extends Service implements AudioManager.OnAudioFocusChangeListener {
 
     private static final int NOTIFICATION_ID = 1;
     private static final String TAG = "MediaControlService";
     private static final String ACTION_TRANSITION = MediaControlService.class.getCanonicalName() + ".ACTION_TRANSITION";
     private static final String ACTION_DISABLE = MediaControlService.class.getCanonicalName() + ".ACTION_DISABLE";
     private static final String CHANNEL_ID = "default";
-    private final AudioFocusRequest focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT).build();
+    private final AudioFocusRequest focusRequest =
+            new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                    .setOnAudioFocusChangeListener(this)
+                    .build();
     private final IBinder binder = new MediaControlBinder();
     private SharedPreferences sharedPreferences;
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -301,16 +304,37 @@ public class MediaControlService extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        if (!enabled) {
-            return;
+        if (hasAudioFocus) {
+            AudioFocusRequest lastingFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).build();
+            audioManager.requestAudioFocus(lastingFocusRequest);
         }
 
-        disable();
+        if (enabled) {
+            disable();
+        }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        if (focusChange != AudioManager.AUDIOFOCUS_LOSS) {
+            return;
+        }
+
+        hasAudioFocus = false;
+
+        if (!enabled) {
+            return;
+        }
+
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder
+                .setContentTitle(getText(R.string.enabled_media_control))
+                .setSmallIcon(R.drawable.ic_baseline_music_note_24)
+                .build());
     }
 
     public interface OnMediaControlServiceSwitchListener {
