@@ -6,17 +6,13 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.InputType;
-import android.util.TypedValue;
 import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.ColorInt;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.ActivityCompat;
@@ -88,22 +84,14 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private void updateButtonTextAndIcon() {
-        TypedValue typedValue = new TypedValue();
-        Resources.Theme theme = getTheme();
-
         if (enabled) {
             button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_stop_24));
             button.setText(R.string.disable_media_control);
 
-            theme.resolveAttribute(R.attr.colorSecondary, typedValue, true);
-            @ColorInt int colorSecondary = typedValue.data;
-            button.setBackgroundTintList(ColorStateList.valueOf(colorSecondary));
-
-            theme.resolveAttribute(R.attr.colorOnSecondary, typedValue, true);
-            @ColorInt int colorOnSecondary = typedValue.data;
-            button.setTextColor(colorOnSecondary);
-            button.setIconTint(ColorStateList.valueOf(colorOnSecondary));
-            button.setRippleColor(ColorStateList.valueOf(colorOnSecondary));
+            button.setBackgroundTintList(getColorStateList(R.color.mtrl_fab_bg_color_selector));
+            button.setTextColor(getColorStateList(R.color.mtrl_fab_icon_text_color_selector));
+            button.setIconTint(getColorStateList(R.color.mtrl_fab_icon_text_color_selector));
+            button.setRippleColor(getColorStateList(R.color.mtrl_fab_ripple_color));
 
             SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
             if (settingsFragment != null) {
@@ -113,15 +101,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_music_note_24));
             button.setText(R.string.enable_media_control);
 
-            theme.resolveAttribute(R.attr.colorPrimary, typedValue, true);
-            @ColorInt int colorPrimary = typedValue.data;
-            button.setBackgroundTintList(ColorStateList.valueOf(colorPrimary));
-
-            theme.resolveAttribute(R.attr.colorOnPrimary, typedValue, true);
-            @ColorInt int colorOnPrimary = typedValue.data;
-            button.setTextColor(colorOnPrimary);
-            button.setIconTint(ColorStateList.valueOf(colorOnPrimary));
-            button.setRippleColor(ColorStateList.valueOf(colorOnPrimary));
+            button.setBackgroundTintList(getColorStateList(R.color.mtrl_fab_bg_color_selector_primary));
+            button.setTextColor(getColorStateList(R.color.mtrl_fab_icon_text_color_selector_primary));
+            button.setIconTint(getColorStateList(R.color.mtrl_fab_icon_text_color_selector_primary));
+            button.setRippleColor(getColorStateList(R.color.mtrl_fab_ripple_color_primary));
 
             SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
             if (settingsFragment != null) {
