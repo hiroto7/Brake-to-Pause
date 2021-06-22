@@ -54,32 +54,34 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             MediaControlService.MediaControlBinder binder = (MediaControlService.MediaControlBinder) service;
             mediaControlService = binder.getService();
 
+            mediaControlService.setOnMediaControlStartedListener(() -> setEnabled(true));
+            mediaControlService.setOnMediaControlStoppedListener(() -> setEnabled(false));
+
             setEnabled(mediaControlService.isEnabled());
-            mediaControlService.setOnMediaControlServiceSwitchListener(MainActivity.this::setEnabled);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-
+            mediaControlService.setOnMediaControlStartedListener(null);
+            mediaControlService.setOnMediaControlStoppedListener(null);
+            mediaControlService = null;
         }
     };
 
     private void setEnabled(boolean enabled) {
         if (enabled) {
             startButton.hide();
-            stopButton.show();
-
             stopButton.setEnabled(true);
+            stopButton.show();
 
             SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
             if (settingsFragment != null) {
                 settingsFragment.getPreferenceScreen().setEnabled(false);
             }
         } else {
+            maybeEnableStartButton();
             startButton.show();
             stopButton.hide();
-
-            maybeEnableStartButton();
 
             SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
             if (settingsFragment != null) {
@@ -154,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     private void onStopButtonClicked(View v) {
         stopButton.setEnabled(false);
-        mediaControlService.disable();
+        mediaControlService.stopMediaControl();
         stopService(intent);
     }
 

@@ -19,6 +19,7 @@ import android.os.IBinder;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.preference.PreferenceManager;
@@ -46,7 +47,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     private static final int NOTIFICATION_ID = 1;
     private static final String TAG = "MediaControlService";
     private static final String ACTION_TRANSITION = MediaControlService.class.getCanonicalName() + ".ACTION_TRANSITION";
-    private static final String ACTION_DISABLE = MediaControlService.class.getCanonicalName() + ".ACTION_DISABLE";
+    private static final String ACTION_STOP_MEDIA_CONTROL = MediaControlService.class.getCanonicalName() + ".ACTION_STOP_MEDIA_CONTROL";
     private static final String CHANNEL_ID = "default";
     private final AudioFocusRequest focusRequest =
             new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
@@ -108,27 +109,20 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         }
     };
     private PendingIntent transitionPendingIntent;
-    private OnMediaControlServiceSwitchListener listener;
-    private final BroadcastReceiver disableReceiver = new BroadcastReceiver() {
+    @Nullable
+    private Runnable onMediaControlStartedListener;
+    @Nullable
+    private Runnable onMediaControlStoppedListener;
+    private final BroadcastReceiver stopReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            disable();
+            stopMediaControl();
             stopSelf();
         }
     };
 
     public boolean isEnabled() {
         return enabled;
-    }
-
-    private void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-
-        if (this.listener == null) {
-            return;
-        }
-
-        this.listener.onMediaControlServiceSwitched(enabled);
     }
 
     private void requestAudioFocus() {
@@ -170,7 +164,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
         LocationRequest locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(1000);
+                .setInterval(1500);
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
@@ -220,19 +214,18 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         activityRecognitionClient.removeActivityTransitionUpdates(transitionPendingIntent);
     }
 
-    public void setOnMediaControlServiceSwitchListener(OnMediaControlServiceSwitchListener listener) {
-        this.listener = listener;
-    }
-
-    public void disable() {
-        unregisterReceiver(disableReceiver);
+    public void stopMediaControl() {
+        unregisterReceiver(stopReceiver);
 
         removeLocationUpdates();
         removeActivityTransitionUpdates();
 
         stopForeground(true);
 
-        setEnabled(false);
+        enabled = false;
+        if (onMediaControlStoppedListener != null) {
+            onMediaControlStoppedListener.run();
+        }
     }
 
     @Override
@@ -260,18 +253,18 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         Intent mainIntent = new Intent(this, MainActivity.class);
         PendingIntent mainPendingIntent = PendingIntent.getActivity(this, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Intent disableIntent = new Intent(ACTION_DISABLE);
-        PendingIntent disablePendingIntent = PendingIntent.getBroadcast(this, 0, disableIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent stopIntent = new Intent(ACTION_STOP_MEDIA_CONTROL);
+        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_music_note_24)
                 .setContentTitle(getString(R.string.enabled_media_control))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(mainPendingIntent)
-                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.disable_media_control), disablePendingIntent);
+                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.stop_media_control), stopPendingIntent);
         startForeground(NOTIFICATION_ID, notificationBuilder.build());
 
-        registerReceiver(disableReceiver, new IntentFilter(ACTION_DISABLE));
+        registerReceiver(stopReceiver, new IntentFilter(ACTION_STOP_MEDIA_CONTROL));
 
         usesLocation = sharedPreferences.getBoolean(getString(R.string.location_key), true);
         usesActivityRecognition = sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true);
@@ -295,7 +288,10 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         requestLocationUpdates();
         requestActivityTransitionUpdates();
 
-        setEnabled(true);
+        enabled = true;
+        if (onMediaControlStartedListener != null) {
+            onMediaControlStartedListener.run();
+        }
 
         return START_STICKY;
     }
@@ -310,7 +306,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         }
 
         if (enabled) {
-            disable();
+            stopMediaControl();
         }
     }
 
@@ -337,8 +333,12 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
                 .build());
     }
 
-    public interface OnMediaControlServiceSwitchListener {
-        void onMediaControlServiceSwitched(boolean enabled);
+    public void setOnMediaControlStartedListener(@Nullable Runnable onMediaControlStartedListener) {
+        this.onMediaControlStartedListener = onMediaControlStartedListener;
+    }
+
+    public void setOnMediaControlStoppedListener(@Nullable Runnable onMediaControlStoppedListener) {
+        this.onMediaControlStoppedListener = onMediaControlStoppedListener;
     }
 
     public class MediaControlBinder extends Binder {
