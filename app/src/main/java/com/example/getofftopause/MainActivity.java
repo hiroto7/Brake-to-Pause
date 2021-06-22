@@ -14,7 +14,6 @@ import android.view.View;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.ActivityCompat;
 import androidx.preference.EditTextPreference;
 import androidx.preference.Preference;
@@ -29,21 +28,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener, View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = "MainActivity";
 
-    private boolean enabled;
-
-    private ExtendedFloatingActionButton button;
-    private SharedPreferences sharedPreferences;
+    private ExtendedFloatingActionButton startButton;
+    private ExtendedFloatingActionButton stopButton;
     private Intent intent;
+    private SharedPreferences sharedPreferences;
     private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-                button.setEnabled(true);
+                maybeEnableStartButton();
 
                 if (result.containsValue(false)) {
-                    Snackbar.make(button, getString(R.string.permission_denied), Snackbar.LENGTH_SHORT).setAnchorView(button).show();
+                    Snackbar.make(startButton, getString(R.string.permission_denied), Snackbar.LENGTH_SHORT).setAnchorView(startButton).show();
                     return;
                 }
 
@@ -67,49 +65,38 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     };
 
     private void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        updateButtonTextAndIcon();
-    }
-
-    private void updateButtonEnabled() {
-        if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
-            button.setEnabled(
-                    sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true) ||
-                            sharedPreferences.getBoolean(getString(R.string.on_bicycle_key), true) ||
-                            sharedPreferences.getBoolean(getString(R.string.running_key), false) ||
-                            sharedPreferences.getBoolean(getString(R.string.walking_key), false));
-        } else {
-            button.setEnabled(sharedPreferences.getBoolean(getString(R.string.location_key), true));
-        }
-    }
-
-    private void updateButtonTextAndIcon() {
         if (enabled) {
-            button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_stop_24));
-            button.setText(R.string.disable_media_control);
+            startButton.hide();
+            stopButton.show();
 
-            button.setBackgroundTintList(getColorStateList(R.color.mtrl_fab_bg_color_selector));
-            button.setTextColor(getColorStateList(R.color.mtrl_fab_icon_text_color_selector));
-            button.setIconTint(getColorStateList(R.color.mtrl_fab_icon_text_color_selector));
-            button.setRippleColor(getColorStateList(R.color.mtrl_fab_ripple_color));
+            stopButton.setEnabled(true);
 
             SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
             if (settingsFragment != null) {
                 settingsFragment.getPreferenceScreen().setEnabled(false);
             }
         } else {
-            button.setIcon(AppCompatResources.getDrawable(this, R.drawable.ic_baseline_music_note_24));
-            button.setText(R.string.enable_media_control);
+            startButton.show();
+            stopButton.hide();
 
-            button.setBackgroundTintList(getColorStateList(R.color.mtrl_fab_bg_color_selector_primary));
-            button.setTextColor(getColorStateList(R.color.mtrl_fab_icon_text_color_selector_primary));
-            button.setIconTint(getColorStateList(R.color.mtrl_fab_icon_text_color_selector_primary));
-            button.setRippleColor(getColorStateList(R.color.mtrl_fab_ripple_color_primary));
+            maybeEnableStartButton();
 
             SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
             if (settingsFragment != null) {
                 settingsFragment.getPreferenceScreen().setEnabled(true);
             }
+        }
+    }
+
+    private void maybeEnableStartButton() {
+        if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
+            startButton.setEnabled(
+                    sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true) ||
+                            sharedPreferences.getBoolean(getString(R.string.on_bicycle_key), true) ||
+                            sharedPreferences.getBoolean(getString(R.string.running_key), false) ||
+                            sharedPreferences.getBoolean(getString(R.string.walking_key), false));
+        } else {
+            startButton.setEnabled(sharedPreferences.getBoolean(getString(R.string.location_key), true));
         }
     }
 
@@ -139,14 +126,17 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     .commit();
         }
 
-        button = findViewById(R.id.floatingActionButton);
+        startButton = findViewById(R.id.button_start);
+        stopButton = findViewById(R.id.button_stop);
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         intent = new Intent(getApplication(), MediaControlService.class);
 
-        button.setOnClickListener(this);
+        startButton.setOnClickListener(this::onStartButtonClicked);
+        stopButton.setOnClickListener(this::onStopButtonClicked);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
-        updateButtonEnabled();
+        maybeEnableStartButton();
     }
 
     @Override
@@ -158,39 +148,37 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 getString(R.string.on_bicycle_key),
                 getString(R.string.running_key),
                 getString(R.string.walking_key)).contains(key)) {
-            updateButtonEnabled();
+            maybeEnableStartButton();
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        if (enabled) {
-            mediaControlService.disable();
-            stopService(intent);
-        } else {
-            List<String> requestedPermissions = new ArrayList<>();
+    private void onStopButtonClicked(View v) {
+        stopButton.setEnabled(false);
+        mediaControlService.disable();
+        stopService(intent);
+    }
 
-            if (sharedPreferences.getBoolean(getString(R.string.location_key), true) &&
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                requestedPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
-                requestedPermissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-            }
+    private void onStartButtonClicked(View v) {
+        startButton.setEnabled(false);
 
-            if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true) &&
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-                requestedPermissions.add(Manifest.permission.ACTIVITY_RECOGNITION);
-            }
-
-            if (!requestedPermissions.isEmpty()) {
-                button.setEnabled(false);
-                requestPermissionsLauncher.launch(requestedPermissions.toArray(new String[0]));
-
-                return;
-            }
-
-            startForegroundService(intent);
+        List<String> requestedPermissions = new ArrayList<>();
+        if (sharedPreferences.getBoolean(getString(R.string.location_key), true) &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestedPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            requestedPermissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         }
+        if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true) &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+            requestedPermissions.add(Manifest.permission.ACTIVITY_RECOGNITION);
+        }
+
+        if (!requestedPermissions.isEmpty()) {
+            requestPermissionsLauncher.launch(requestedPermissions.toArray(new String[0]));
+            return;
+        }
+
+        startForegroundService(intent);
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {

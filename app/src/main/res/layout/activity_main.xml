@@ -12,14 +12,32 @@
         android:layout_height="match_parent" />
 
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/floatingActionButton"
+        android:id="@+id/button_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_margin="16dp"
+        android:backgroundTint="@color/mtrl_fab_bg_color_selector_primary"
+        android:clickable="true"
+        android:text="@string/enable_media_control"
+        android:textColor="@color/mtrl_fab_icon_text_color_selector_primary"
+        android:visibility="gone"
+        app:icon="@drawable/ic_baseline_music_note_24"
+        app:iconTint="@color/mtrl_fab_icon_text_color_selector_primary"
+        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
+        app:rippleColor="@color/mtrl_fab_ripple_color_primary"
+        app:srcCompat="@drawable/ic_baseline_pedal_bike_24" />
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/button_stop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
         android:layout_margin="16dp"
         android:clickable="true"
-        android:text="@string/enable_media_control"
-        app:icon="@drawable/ic_baseline_music_note_24"
+        android:text="@string/disable_media_control"
+        android:visibility="gone"
+        app:icon="@drawable/ic_baseline_stop_24"
         app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
         app:srcCompat="@drawable/ic_baseline_pedal_bike_24" />
 
