@@ -32,13 +32,16 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     private static final String TAG = "MainActivity";
 
+    private boolean enabled;
+    private boolean starting;
+
     private ExtendedFloatingActionButton startButton;
     private ExtendedFloatingActionButton stopButton;
     private Intent intent;
     private SharedPreferences sharedPreferences;
     private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-                maybeEnableStartButton();
+                setStarting(false);
 
                 if (result.containsValue(false)) {
                     Snackbar.make(startButton, getString(R.string.permission_denied), Snackbar.LENGTH_SHORT).setAnchorView(startButton).show();
@@ -68,7 +71,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     };
 
+    private void setStarting(boolean starting) {
+        this.starting = starting;
+        maybeEnableStartButton();
+    }
+
     private void setEnabled(boolean enabled) {
+        this.enabled = enabled;
         if (enabled) {
             startButton.hide();
             stopButton.setEnabled(true);
@@ -79,7 +88,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 settingsFragment.getPreferenceScreen().setEnabled(false);
             }
         } else {
-            maybeEnableStartButton();
             startButton.show();
             stopButton.hide();
 
@@ -88,10 +96,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 settingsFragment.getPreferenceScreen().setEnabled(true);
             }
         }
+        maybeEnableStartButton();
     }
 
     private void maybeEnableStartButton() {
-        if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
+        if (enabled || starting) {
+            startButton.setEnabled(false);
+        } else if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
             startButton.setEnabled(
                     sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true) ||
                             sharedPreferences.getBoolean(getString(R.string.on_bicycle_key), true) ||
@@ -137,8 +148,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         startButton.setOnClickListener(this::onStartButtonClicked);
         stopButton.setOnClickListener(this::onStopButtonClicked);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-
-        maybeEnableStartButton();
     }
 
     @Override
@@ -161,8 +170,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private void onStartButtonClicked(View v) {
-        startButton.setEnabled(false);
-
         List<String> requestedPermissions = new ArrayList<>();
         if (sharedPreferences.getBoolean(getString(R.string.location_key), true) &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -176,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
 
         if (!requestedPermissions.isEmpty()) {
+            setStarting(true);
             requestPermissionsLauncher.launch(requestedPermissions.toArray(new String[0]));
             return;
         }
