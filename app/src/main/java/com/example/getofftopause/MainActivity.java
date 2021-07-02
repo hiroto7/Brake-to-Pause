@@ -21,7 +21,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.SwitchPreference;
 
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
+import com.example.getofftopause.databinding.ActivityMainBinding;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -35,8 +35,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private boolean enabled;
     private boolean starting;
 
-    private ExtendedFloatingActionButton startButton;
-    private ExtendedFloatingActionButton stopButton;
+    private ActivityMainBinding binding;
     private Intent intent;
     private SharedPreferences sharedPreferences;
     private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
@@ -44,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 setStarting(false);
 
                 if (result.containsValue(false)) {
-                    Snackbar.make(startButton, getString(R.string.permission_denied), Snackbar.LENGTH_SHORT).setAnchorView(startButton).show();
+                    Snackbar.make(binding.buttonStart, getString(R.string.permission_denied), Snackbar.LENGTH_SHORT).setAnchorView(binding.buttonStart).show();
                     return;
                 }
 
@@ -78,20 +77,19 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     private void setEnabled(boolean enabled) {
         this.enabled = enabled;
+        SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
         if (enabled) {
-            startButton.hide();
-            stopButton.setEnabled(true);
-            stopButton.show();
+            binding.buttonStart.hide();
+            binding.buttonStop.setEnabled(true);
+            binding.buttonStop.show();
 
-            SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
             if (settingsFragment != null) {
                 settingsFragment.getPreferenceScreen().setEnabled(false);
             }
         } else {
-            startButton.show();
-            stopButton.hide();
+            binding.buttonStart.show();
+            binding.buttonStop.hide();
 
-            SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
             if (settingsFragment != null) {
                 settingsFragment.getPreferenceScreen().setEnabled(true);
             }
@@ -101,15 +99,15 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     private void maybeEnableStartButton() {
         if (enabled || starting) {
-            startButton.setEnabled(false);
+            binding.buttonStart.setEnabled(false);
         } else if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
-            startButton.setEnabled(
+            binding.buttonStart.setEnabled(
                     sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true) ||
                             sharedPreferences.getBoolean(getString(R.string.on_bicycle_key), true) ||
                             sharedPreferences.getBoolean(getString(R.string.running_key), false) ||
                             sharedPreferences.getBoolean(getString(R.string.walking_key), false));
         } else {
-            startButton.setEnabled(sharedPreferences.getBoolean(getString(R.string.location_key), true));
+            binding.buttonStart.setEnabled(sharedPreferences.getBoolean(getString(R.string.location_key), true));
         }
     }
 
@@ -130,7 +128,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        View view = binding.getRoot();
+        setContentView(view);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager()
@@ -139,14 +139,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     .commit();
         }
 
-        startButton = findViewById(R.id.button_start);
-        stopButton = findViewById(R.id.button_stop);
-
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         intent = new Intent(getApplication(), MediaControlService.class);
 
-        startButton.setOnClickListener(this::onStartButtonClicked);
-        stopButton.setOnClickListener(this::onStopButtonClicked);
+        binding.buttonStart.setOnClickListener(this::onStartButtonClicked);
+        binding.buttonStop.setOnClickListener(this::onStopButtonClicked);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
@@ -164,7 +161,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private void onStopButtonClicked(View v) {
-        stopButton.setEnabled(false);
+        binding.buttonStop.setEnabled(false);
         mediaControlService.stopMediaControl();
         stopService(intent);
     }
