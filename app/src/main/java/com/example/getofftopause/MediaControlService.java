@@ -1,6 +1,7 @@
 package com.example.getofftopause;
 
 import android.Manifest;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -15,6 +16,7 @@ import android.location.Location;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 
@@ -48,7 +50,8 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     private static final String TAG = "MediaControlService";
     private static final String ACTION_TRANSITION = MediaControlService.class.getCanonicalName() + ".ACTION_TRANSITION";
     private static final String ACTION_STOP_MEDIA_CONTROL = MediaControlService.class.getCanonicalName() + ".ACTION_STOP_MEDIA_CONTROL";
-    private static final String CHANNEL_ID = "default";
+    private static final String MEDIA_CONTROL_CHANNEL_ID = "media_control";
+    private static final String AUTOMATIC_STOP_CHANNEL_ID = "automatic_stop";
     private final AudioFocusRequest focusRequest =
             new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
                     .setOnAudioFocusChangeListener(this)
@@ -60,11 +63,27 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     private NotificationManager notificationManager;
     private ActivityRecognitionClient activityRecognitionClient;
     private boolean enabled;
+    private final Handler handler = new Handler();
     private boolean usesLocation;
     private boolean usesActivityRecognition;
     private boolean hasAudioFocus;
     private List<Integer> selectedActivities;
     private NotificationCompat.Builder notificationBuilder;
+    private PendingIntent mainPendingIntent;
+    Runnable stopMediaControlWithNotification = () -> {
+        stopMediaControl();
+
+        Notification notification = new NotificationCompat.Builder(this, AUTOMATIC_STOP_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_baseline_stop_24)
+                .setContentTitle(getString(R.string.media_control_automatically_ended))
+                .setContentText(getString(R.string.time_has_passed_with_media_paused))
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setContentIntent(mainPendingIntent)
+                .setAutoCancel(true)
+                .build();
+
+        notificationManager.notify(NOTIFICATION_ID, notification);
+    };
     private final LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
@@ -130,12 +149,14 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             return;
         }
 
-        audioManager.requestAudioFocus(focusRequest);
+        handler.postDelayed(stopMediaControlWithNotification, 60 * 30 * 1000);
+
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder
                 .setContentTitle(getText(R.string.paused_media))
                 .setSmallIcon(R.drawable.ic_baseline_pause_24)
                 .build());
 
+        audioManager.requestAudioFocus(focusRequest);
         hasAudioFocus = true;
     }
 
@@ -144,12 +165,14 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             return;
         }
 
-        audioManager.abandonAudioFocusRequest(focusRequest);
+        handler.removeCallbacks(stopMediaControlWithNotification);
+
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder
                 .setContentTitle(getText(R.string.playing_media))
                 .setSmallIcon(R.drawable.ic_baseline_play_arrow_24)
                 .build());
 
+        audioManager.abandonAudioFocusRequest(focusRequest);
         hasAudioFocus = false;
     }
 
@@ -177,8 +200,10 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     }
 
     private void createNotificationChannel() {
-        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, getString(R.string.media_control), NotificationManager.IMPORTANCE_LOW);
-        notificationManager.createNotificationChannel(channel);
+        List<NotificationChannel> channels = Arrays.asList(
+                new NotificationChannel(MEDIA_CONTROL_CHANNEL_ID, getString(R.string.media_control), NotificationManager.IMPORTANCE_LOW),
+                new NotificationChannel(AUTOMATIC_STOP_CHANNEL_ID, getString(R.string.automatic_exit), NotificationManager.IMPORTANCE_HIGH));
+        notificationManager.createNotificationChannels(channels);
     }
 
     private void requestActivityTransitionUpdates() {
@@ -216,6 +241,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
     public void stopMediaControl() {
         unregisterReceiver(stopReceiver);
+        handler.removeCallbacks(stopMediaControlWithNotification);
 
         removeLocationUpdates();
         removeActivityTransitionUpdates();
@@ -251,17 +277,17 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         createNotificationChannel();
 
         Intent mainIntent = new Intent(this, MainActivity.class);
-        PendingIntent mainPendingIntent = PendingIntent.getActivity(this, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        mainPendingIntent = PendingIntent.getActivity(this, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Intent stopIntent = new Intent(ACTION_STOP_MEDIA_CONTROL);
         PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
+        notificationBuilder = new NotificationCompat.Builder(this, MEDIA_CONTROL_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_music_note_24)
                 .setContentTitle(getString(R.string.enabled_media_control))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(mainPendingIntent)
-                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.stop_media_control), stopPendingIntent);
+                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.exit_media_control), stopPendingIntent);
         startForeground(NOTIFICATION_ID, notificationBuilder.build());
 
         registerReceiver(stopReceiver, new IntentFilter(ACTION_STOP_MEDIA_CONTROL));
@@ -321,6 +347,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             return;
         }
 
+        handler.removeCallbacks(stopMediaControlWithNotification);
         hasAudioFocus = false;
 
         if (!enabled) {

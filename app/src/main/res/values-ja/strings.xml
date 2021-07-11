@@ -4,12 +4,16 @@
     <string name="permission_denied">アクセスが拒否されました</string>
 
     <string name="start_media_control">メディアの制御を開始</string>
-    <string name="stop_media_control">メディアの制御を停止</string>
+    <string name="exit_media_control">メディアの制御を終了</string>
 
     <string name="media_control">メディアの制御</string>
     <string name="enabled_media_control">メディアを制御中</string>
     <string name="playing_media">メディアを再生中</string>
     <string name="paused_media">メディアを一時停止中</string>
+
+    <string name="automatic_exit">メディアの制御の自動終了</string>
+    <string name="media_control_automatically_ended">メディアの制御を自動終了しました</string>
+    <string name="time_has_passed_with_media_paused">一時停止のまま30分が経過しました</string>
 
     <string name="activity_recognition_header">身体活動に応じた制御</string>
 
