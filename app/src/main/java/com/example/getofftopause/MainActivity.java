@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.InputType;
@@ -175,7 +176,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             requestedPermissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         }
         if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true) &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             requestedPermissions.add(Manifest.permission.ACTIVITY_RECOGNITION);
         }
 

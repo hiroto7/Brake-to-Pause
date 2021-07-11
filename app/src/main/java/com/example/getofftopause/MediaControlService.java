@@ -38,6 +38,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.Task;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -109,20 +110,21 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     private final BroadcastReceiver transitionsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (ActivityTransitionResult.hasResult(intent)) {
+            if (!ActivityTransitionResult.hasResult(intent)) {
+                return;
+            }
 
-                ActivityTransitionResult result = ActivityTransitionResult.extractResult(intent);
+            ActivityTransitionResult result = ActivityTransitionResult.extractResult(intent);
 
-                for (ActivityTransitionEvent event : result.getTransitionEvents()) {
-                    if (selectedActivities.contains(event.getActivityType()) && event.getTransitionType() == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
-                        requestLocationUpdates();
-                        if (!usesLocation) {
-                            abandonAudioFocusRequest();
-                        }
-                    } else {
-                        removeLocationUpdates();
-                        requestAudioFocus();
+            for (ActivityTransitionEvent event : result.getTransitionEvents()) {
+                if (selectedActivities.contains(event.getActivityType()) && event.getTransitionType() == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
+                    requestLocationUpdates();
+                    if (!usesLocation) {
+                        abandonAudioFocusRequest();
                     }
+                } else {
+                    removeLocationUpdates();
+                    requestAudioFocus();
                 }
             }
         }
@@ -227,7 +229,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
                 .collect(Collectors.toList());
 
         ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
-        activityRecognitionClient.requestActivityTransitionUpdates(request, transitionPendingIntent);
+        Task<Void> task = activityRecognitionClient.requestActivityTransitionUpdates(request, transitionPendingIntent);
     }
 
     private void removeActivityTransitionUpdates() {
