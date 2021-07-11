@@ -202,7 +202,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     private void createNotificationChannel() {
         List<NotificationChannel> channels = Arrays.asList(
                 new NotificationChannel(MEDIA_CONTROL_CHANNEL_ID, getString(R.string.media_control), NotificationManager.IMPORTANCE_LOW),
-                new NotificationChannel(AUTOMATIC_STOP_CHANNEL_ID, getString(R.string.automatic_exit), NotificationManager.IMPORTANCE_HIGH));
+                new NotificationChannel(AUTOMATIC_STOP_CHANNEL_ID, getString(R.string.automatic_exit), NotificationManager.IMPORTANCE_DEFAULT));
         notificationManager.createNotificationChannels(channels);
     }
 
