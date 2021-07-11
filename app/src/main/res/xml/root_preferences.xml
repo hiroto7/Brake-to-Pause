@@ -4,9 +4,7 @@
 
         <SwitchPreference
             app:defaultValue="true"
-            app:icon="@drawable/ic_baseline_location_on_24"
             app:key="@string/location_key"
-            app:summary="@string/location_summary"
             app:title="@string/location_title" />
         <EditTextPreference
             app:defaultValue="@string/speed_threshold_default_value"
@@ -20,9 +18,8 @@
 
         <SwitchPreference
             app:defaultValue="true"
-            app:icon="@drawable/ic_baseline_battery_full_24"
             app:key="@string/activity_recognition_key"
-            app:summary="@string/activity_recognition_summary_with_location"
+            app:summary="@string/activity_recognition_summary"
             app:title="@string/activity_recognition_title_with_location" />
         <CheckBoxPreference
             app:defaultValue="true"

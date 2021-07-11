@@ -4,7 +4,7 @@
     <string name="permission_denied">Permission denied</string>
 
     <string name="start_media_control">Start media control</string>
-    <string name="exit_media_control" translatable="false">Exit media control</string>
+    <string name="exit_media_control">Exit media control</string>
 
     <string name="media_control">Media control</string>
     <string name="enabled_media_control">Controlling media</string>
@@ -20,8 +20,7 @@
     <string name="activity_recognition_key" translatable="false">activity_recognition</string>
     <string name="activity_recognition_title_with_location">Access location only during certain activities</string>
     <string name="activity_recognition_title_without_location">Play media only during certain activities</string>
-    <string name="activity_recognition_summary_with_location">Otherwise, pause media. Accesses your physical activity (Power saving)</string>
-    <string name="activity_recognition_summary_without_location">Accesses your physical activity (Power saving)</string>
+    <string name="activity_recognition_summary">Power saving</string>
 
     <string name="in_vehicle_key" translatable="false">in_vehicle</string>
     <string name="on_bicycle_key" translatable="false">on_bicycle</string>
@@ -33,11 +32,10 @@
     <string name="running_title">Running</string>
     <string name="walking_title">Walking</string>
 
-    <string name="location_header">Control depending on the speed</string>
+    <string name="location_header">Control depending on moving speed</string>
 
     <string name="location_key" translatable="false">location</string>
-    <string name="location_title">Pause media as soon as you slow down</string>
-    <string name="location_summary">Accesses this device\'s location</string>
+    <string name="location_title">Play media only when you are moving faster than you specify</string>
 
     <string name="speed_threshold_key" translatable="false">speed_threshold</string>
     <string name="speed_threshold_title">Speed</string>

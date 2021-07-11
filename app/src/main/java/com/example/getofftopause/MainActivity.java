@@ -198,13 +198,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 return;
             }
 
-            if (sharedPreferences.getBoolean(getString(R.string.location_key), true)) {
-                activityRecognitionPreference.setTitle(R.string.activity_recognition_title_with_location);
-                activityRecognitionPreference.setSummary(R.string.activity_recognition_summary_with_location);
-            } else {
-                activityRecognitionPreference.setTitle(R.string.activity_recognition_title_without_location);
-                activityRecognitionPreference.setSummary(R.string.activity_recognition_summary_without_location);
-            }
+            activityRecognitionPreference.setTitle(
+                    sharedPreferences.getBoolean(getString(R.string.location_key), true) ?
+                            R.string.activity_recognition_title_with_location :
+                            R.string.activity_recognition_title_without_location);
         }
 
         @Override

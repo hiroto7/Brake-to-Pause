@@ -15,21 +15,19 @@
     <string name="media_control_automatically_ended">メディアの制御を自動終了しました</string>
     <string name="time_has_passed_with_media_paused">一時停止のまま30分が経過しました</string>
 
-    <string name="activity_recognition_header">身体活動に応じた制御</string>
+    <string name="activity_recognition_header">アクティビティに応じた制御</string>
 
-    <string name="activity_recognition_title_with_location">特定のアクティビティ中のみ位置情報へアクセス</string>
-    <string name="activity_recognition_title_without_location">特定のアクティビティ中のみメディアを再生</string>
-    <string name="activity_recognition_summary_with_location">それ以外のときはメディアを一時停止します。身体活動データにアクセスします（省電力）</string>
-    <string name="activity_recognition_summary_without_location">身体活動データにアクセスします（省電力）</string>
+    <string name="activity_recognition_title_with_location">指定したアクティビティの間だけ位置情報へアクセス</string>
+    <string name="activity_recognition_title_without_location">指定したアクティビティの間だけメディアを再生</string>
+    <string name="activity_recognition_summary">省電力</string>
 
     <string name="in_vehicle_title">車内</string>
     <string name="on_bicycle_title">自転車</string>
     <string name="running_title">ランニング</string>
     <string name="walking_title">ウォーキング</string>
 
-    <string name="location_header">速度に応じた制御</string>
-    <string name="location_title">減速したらすぐにメディアを一時停止</string>
-    <string name="location_summary">位置情報にアクセスします</string>
+    <string name="location_header">移動速度に応じた制御</string>
+    <string name="location_title">指定した速度以上で移動しているときだけメディアを再生</string>
 
     <string name="speed_threshold_title">再生と一時停止を切り替える速度</string>
     <string name="kph">km/h</string>
