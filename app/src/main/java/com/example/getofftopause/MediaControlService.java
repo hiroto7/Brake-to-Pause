@@ -71,7 +71,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     private List<Integer> selectedActivities;
     private NotificationCompat.Builder notificationBuilder;
     private PendingIntent mainPendingIntent;
-    Runnable stopMediaControlWithNotification = () -> {
+    private final Runnable stopMediaControlWithNotificationCallback = () -> {
         stopMediaControl();
 
         Notification notification = new NotificationCompat.Builder(this, AUTOMATIC_STOP_CHANNEL_ID)
@@ -151,7 +151,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             return;
         }
 
-        handler.postDelayed(stopMediaControlWithNotification, 60 * 30 * 1000);
+        handler.postDelayed(stopMediaControlWithNotificationCallback, 60 * 30 * 1000);
 
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder
                 .setContentTitle(getText(R.string.paused_media))
@@ -167,7 +167,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             return;
         }
 
-        handler.removeCallbacks(stopMediaControlWithNotification);
+        handler.removeCallbacks(stopMediaControlWithNotificationCallback);
 
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder
                 .setContentTitle(getText(R.string.playing_media))
@@ -243,7 +243,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
     public void stopMediaControl() {
         unregisterReceiver(stopReceiver);
-        handler.removeCallbacks(stopMediaControlWithNotification);
+        handler.removeCallbacks(stopMediaControlWithNotificationCallback);
 
         removeLocationUpdates();
         removeActivityTransitionUpdates();
@@ -349,12 +349,13 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             return;
         }
 
-        handler.removeCallbacks(stopMediaControlWithNotification);
         hasAudioFocus = false;
 
         if (!enabled) {
             return;
         }
+
+        handler.removeCallbacks(stopMediaControlWithNotificationCallback);
 
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder
                 .setContentTitle(getText(R.string.enabled_media_control))
