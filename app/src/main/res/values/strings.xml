@@ -18,7 +18,8 @@
     <string name="activity_recognition_header">Main activity</string>
 
     <string name="activity_recognition_key" translatable="false">activity_recognition</string>
-    <string name="activity_recognition_summary">Power saving</string>
+    <string name="activity_recognition_summary_1">指定したアクティビティの間だけ、移動速度に応じて再生状態を制御します。</string>
+    <string name="activity_recognition_summary_2">それ以外のときは一時停止にします。このとき移動速度を取得しないため、バッテリーを節約できます。</string>
 
     <string name="in_vehicle_key" translatable="false">in_vehicle</string>
     <string name="on_bicycle_key" translatable="false">on_bicycle</string>

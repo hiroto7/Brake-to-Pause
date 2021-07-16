@@ -15,8 +15,6 @@
 
     <string name="activity_recognition_header">メインのアクティビティ</string>
 
-    <string name="activity_recognition_summary">指定したアクティビティの間だけ、移動速度に応じて再生状態を制御します。それ以外のときは移動速度の取得なしに一時停止にするため、バッテリーを節約できます。</string>
-
     <string name="in_vehicle_title">車内</string>
     <string name="on_bicycle_title">自転車</string>
     <string name="running_title">ランニング</string>
