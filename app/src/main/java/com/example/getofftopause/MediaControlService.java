@@ -95,7 +95,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
                 return;
             }
 
-            float speedThresholdKph = Float.parseFloat(sharedPreferences.getString(getString(R.string.speed_threshold_key), getString(R.string.speed_threshold_default_value)));
+            float speedThresholdKph = sharedPreferences.getFloat(getString(R.string.speed_threshold_key), 8);
 
             float lastSpeedMps = location.getSpeed();
             float lastSpeedKph = 3.6f * lastSpeedMps;
@@ -306,10 +306,10 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         if (sharedPreferences.getBoolean(getString(R.string.on_bicycle_key), true)) {
             selectedActivities.add(DetectedActivity.ON_BICYCLE);
         }
-        if (sharedPreferences.getBoolean(getString(R.string.running_key), false)) {
+        if (sharedPreferences.getBoolean(getString(R.string.running_key), true)) {
             selectedActivities.add(DetectedActivity.RUNNING);
         }
-        if (sharedPreferences.getBoolean(getString(R.string.walking_key), false)) {
+        if (sharedPreferences.getBoolean(getString(R.string.walking_key), true)) {
             selectedActivities.add(DetectedActivity.WALKING);
         }
 

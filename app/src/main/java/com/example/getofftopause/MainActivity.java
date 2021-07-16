@@ -2,6 +2,7 @@ package com.example.getofftopause;
 
 import android.Manifest;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -9,25 +10,30 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.text.InputType;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.ImageView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.preference.EditTextPreference;
-import androidx.preference.Preference;
-import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
-import androidx.preference.SwitchPreference;
 
 import com.example.getofftopause.databinding.ActivityMainBinding;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -78,39 +84,18 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     private void setEnabled(boolean enabled) {
         this.enabled = enabled;
-        SettingsFragment settingsFragment = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
         if (enabled) {
             binding.buttonStart.hide();
             binding.buttonStop.setEnabled(true);
             binding.buttonStop.show();
-
-            if (settingsFragment != null) {
-                settingsFragment.getPreferenceScreen().setEnabled(false);
-            }
         } else {
             binding.buttonStart.show();
             binding.buttonStop.hide();
-
-            if (settingsFragment != null) {
-                settingsFragment.getPreferenceScreen().setEnabled(true);
-            }
         }
         maybeEnableStartButton();
     }
 
-    private void maybeEnableStartButton() {
-        if (enabled || starting) {
-            binding.buttonStart.setEnabled(false);
-        } else if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
-            binding.buttonStart.setEnabled(
-                    sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true) ||
-                            sharedPreferences.getBoolean(getString(R.string.on_bicycle_key), true) ||
-                            sharedPreferences.getBoolean(getString(R.string.running_key), false) ||
-                            sharedPreferences.getBoolean(getString(R.string.walking_key), false));
-        } else {
-            binding.buttonStart.setEnabled(sharedPreferences.getBoolean(getString(R.string.location_key), true));
-        }
-    }
+    private List<Activity> activities;
 
     @Override
     protected void onPause() {
@@ -126,6 +111,16 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
+    private void maybeEnableStartButton() {
+        if (enabled || starting) {
+            binding.buttonStart.setEnabled(false);
+        } else if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
+            binding.buttonStart.setEnabled(activities.stream().anyMatch(activity -> sharedPreferences.getBoolean(activity.key, true)));
+        } else {
+            binding.buttonStart.setEnabled(sharedPreferences.getBoolean(getString(R.string.location_key), true));
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -133,23 +128,103 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         View view = binding.getRoot();
         setContentView(view);
 
-        if (savedInstanceState == null) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.settings, new SettingsFragment())
-                    .commit();
-        }
-
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         intent = new Intent(getApplication(), MediaControlService.class);
 
         binding.buttonStart.setOnClickListener(this::onStartButtonClicked);
         binding.buttonStop.setOnClickListener(this::onStopButtonClicked);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+
+        binding.editSpeed.setText(String.valueOf(
+                sharedPreferences.getFloat(
+                        getString(R.string.speed_threshold_key), 8)));
+        binding.editSpeed.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!s.toString().matches("^(?:[0-9]+(?:\\.[0-9]*)?|[0-9]*\\.[0-9]+)$")) {
+                    return;
+                }
+
+                sharedPreferences
+                        .edit()
+                        .putFloat(getString(R.string.speed_threshold_key), Float.parseFloat(s.toString()))
+                        .apply();
+            }
+        });
+
+        boolean usesActivityRecognition = sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true);
+        binding.switchActivityRecognition.setChecked(usesActivityRecognition);
+        if (usesActivityRecognition) {
+            binding.layout.setVisibility(View.VISIBLE);
+            binding.divider.setVisibility(View.VISIBLE);
+        } else {
+            binding.layout.setVisibility(View.GONE);
+            binding.divider.setVisibility(View.GONE);
+        }
+
+        binding.switchActivityRecognition.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            sharedPreferences
+                    .edit()
+                    .putBoolean(getString(R.string.activity_recognition_key), isChecked)
+                    .apply();
+            if (isChecked) {
+                binding.layout.setVisibility(View.VISIBLE);
+                binding.divider.setVisibility(View.VISIBLE);
+            } else {
+                binding.layout.setVisibility(View.GONE);
+                binding.divider.setVisibility(View.GONE);
+            }
+        });
+
+        binding.layout.setOnClickListener(v -> {
+            Map<Activity, Boolean> map = new HashMap<>();
+            activities.forEach(activity -> map.put(activity, sharedPreferences.getBoolean(activity.key, true)));
+
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.activity_recognition_header)
+                    .setPositiveButton("ok", (dialog, which) -> {
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        activities.forEach(activity -> editor.putBoolean(activity.key, map.get(activity)));
+                        editor.apply();
+                    })
+                    .setNeutralButton("cancel", (dialog, which) -> {
+
+                    })
+                    .setMultiChoiceItems(
+                            activities.stream().map(activity -> activity.title).toArray(String[]::new),
+                            ArrayUtils.toPrimitive(activities.stream().map(activity -> sharedPreferences.getBoolean(activity.key, true)).<Boolean>toArray(Boolean[]::new)),
+                            (dialog, which, isChecked) -> {
+                                map.put(activities.get(which), isChecked);
+                                ((AlertDialog) dialog).getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(map.values().stream().anyMatch(value -> value));
+                            })
+                    .show();
+        });
+
+        activities = Arrays.asList(
+                new Activity(R.string.in_vehicle_key, R.string.in_vehicle_title, binding.imageInVehicle),
+                new Activity(R.string.on_bicycle_key, R.string.on_bicycle_title, binding.imageOnBicycle),
+                new Activity(R.string.running_key, R.string.running_title, binding.imageRunning),
+                new Activity(R.string.walking_key, R.string.walking_title, binding.imageWalking));
+
+        updateSelectedActivity();
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (activities.stream().anyMatch(activity -> activity.key.equals(key))) {
+            updateSelectedActivity();
+        }
+
         if (Arrays.asList(
                 getString(R.string.location_key),
                 getString(R.string.activity_recognition_key),
@@ -158,6 +233,32 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 getString(R.string.running_key),
                 getString(R.string.walking_key)).contains(key)) {
             maybeEnableStartButton();
+        }
+    }
+
+    private void updateSelectedActivity() {
+        activities.forEach(activity -> activity.imageView.setVisibility(View.GONE));
+
+        List<Activity> selectedActivities = activities.stream().filter(activity -> sharedPreferences.getBoolean(activity.key, true)).collect(Collectors.toList());
+        selectedActivities.forEach(activity -> activity.imageView.setVisibility(View.VISIBLE));
+
+        if (selectedActivities.size() == 1) {
+            binding.textSelectedActivity.setVisibility(View.VISIBLE);
+            binding.textSelectedActivity.setText(selectedActivities.get(0).title);
+        } else {
+            binding.textSelectedActivity.setVisibility(View.GONE);
+        }
+    }
+
+    private class Activity {
+        final public String key;
+        final public String title;
+        final public ImageView imageView;
+
+        Activity(int keyResId, int titleResId, ImageView imageView) {
+            this.key = getString(keyResId);
+            this.title = getString(titleResId);
+            this.imageView = imageView;
         }
     }
 
@@ -188,55 +289,5 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
 
         startForegroundService(intent);
-    }
-
-    public static class SettingsFragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
-        private SharedPreferences sharedPreferences;
-
-        private void updateTitleAndSummary() {
-            SwitchPreference activityRecognitionPreference = findPreference(getString(R.string.activity_recognition_key));
-
-            if (activityRecognitionPreference == null) {
-                return;
-            }
-
-            activityRecognitionPreference.setTitle(
-                    sharedPreferences.getBoolean(getString(R.string.location_key), true) ?
-                            R.string.activity_recognition_title_with_location :
-                            R.string.activity_recognition_title_without_location);
-        }
-
-        @Override
-        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-            setPreferencesFromResource(R.xml.root_preferences, rootKey);
-
-            sharedPreferences = getPreferenceManager().getSharedPreferences();
-            EditTextPreference speedPreference = findPreference(getString(R.string.speed_threshold_key));
-
-            if (speedPreference != null) {
-                speedPreference.setOnBindEditTextListener(
-                        editText -> {
-                            editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-                            editText.setHint(R.string.speed_threshold_default_value);
-                        });
-
-                speedPreference.setSummaryProvider((Preference.SummaryProvider<EditTextPreference>) preference -> preference.getText() + " " + getString(R.string.kph));
-                speedPreference.setOnPreferenceChangeListener((preference, newValue) -> !newValue.equals(""));
-            }
-
-            sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-            updateTitleAndSummary();
-        }
-
-        @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            if (!isAdded()) {
-                return;
-            }
-
-            if (key.equals(getString(R.string.location_key))) {
-                updateTitleAndSummary();
-            }
-        }
     }
 }
