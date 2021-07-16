@@ -15,7 +15,7 @@
     <string name="media_control_automatically_ended">Media control has ended automatically</string>
     <string name="time_has_passed_with_media_paused">30 minutes have passed with the media paused</string>
 
-    <string name="activity_recognition_header">Control depending on your physical activity</string>
+    <string name="activity_recognition_header">Main activity</string>
 
     <string name="activity_recognition_key" translatable="false">activity_recognition</string>
     <string name="activity_recognition_summary">Power saving</string>
@@ -37,9 +37,9 @@
     <string name="speed_threshold_key" translatable="false">speed_threshold</string>
     <string name="speed_threshold_title">Speed</string>
     <string name="kph">km/h</string>
-    <string name="speed_summary">速く移動しているときだけ音楽などのメディアを再生し、それ以外のときは自動的に一時停止にできます。</string>
-    <string name="pause_at_low_speed">移動速度が指定した速度よりも遅くなると、再生を一時停止します。</string>
-    <string name="play_at_high_speed">移動速度が指定した速度以上に回復すると、再生を再開します。</string>
     <string name="location_permission_required">移動速度の取得のため、位置情報へのアクセス権限が必要です。</string>
     <string name="activity_recognition_permission_required">身体活動データへのアクセス権限が必要です。</string>
+    <string name="pause_at_low_speed">Playback is paused when moving slower than the specified speed.</string>
+    <string name="play_at_high_speed">Playback is resumed when moving faster than the specified speed.</string>
+    <string name="speed_summary">Play media such as music only when you are moving fast. Otherwise, the playback is automatically paused.</string>
 </resources>
