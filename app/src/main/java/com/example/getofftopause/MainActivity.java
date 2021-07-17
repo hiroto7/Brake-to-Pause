@@ -170,12 +170,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.activity_recognition_header)
-                    .setPositiveButton("ok", (dialog, which) -> {
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         activities.forEach(activity -> editor.putBoolean(activity.key, map.get(activity)));
                         editor.apply();
                     })
-                    .setNeutralButton("cancel", null)
+                    .setNegativeButton(android.R.string.cancel, null)
                     .setMultiChoiceItems(
                             activities.stream().map(activity -> activity.title).toArray(String[]::new),
                             ArrayUtils.toPrimitive(activities.stream().map(activity -> sharedPreferences.getBoolean(activity.key, true)).<Boolean>toArray(Boolean[]::new)),
