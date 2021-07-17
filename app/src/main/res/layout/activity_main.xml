@@ -21,8 +21,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/speed_header"
-                android:textAppearance="?attr/textAppearanceHeadline6" />
+                android:text="@string/speed_threshold_title"
+                android:textAppearance="?attr/textAppearanceHeadline5" />
 
             <TextView
                 android:id="@+id/textView5"
@@ -44,7 +44,7 @@
                 android:text="@string/n_kph"
                 android:textAlignment="center"
                 android:textAppearance="?attr/textAppearanceHeadline3"
-                android:textColor="?android:attr/textColorPrimary" />
+                android:textColor="?attr/colorAccent" />
 
             <TextView
                 android:layout_width="wrap_content"

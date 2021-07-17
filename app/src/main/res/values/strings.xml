@@ -35,14 +35,13 @@
 
     <string name="location_key" translatable="false">location</string>
 
-    <string name="speed_header">Control Playback according to moving speed</string>
     <string name="speed_threshold_key" translatable="false">speed_threshold</string>
-    <string name="speed_threshold_title">Speed</string>
+    <string name="speed_threshold_title">Switch playback state at the specified speed</string>
     <string name="kph">km/h</string>
     <string name="n_kph">%d km/h</string>
     <string name="location_permission_required">移動速度の取得のため、位置情報へのアクセス権限が必要です。</string>
     <string name="activity_recognition_permission_required">身体活動データへのアクセス権限が必要です。</string>
     <string name="pause_at_low_speed">Playback is paused when moving slower than the specified speed.</string>
     <string name="play_at_high_speed">Playback is resumed when moving faster than the specified speed.</string>
-    <string name="speed_summary">Play media such as music only when you are moving fast. Otherwise, the playback is automatically paused.</string>
+    <string name="speed_summary">Automatically pause playback of media such as music only when you slow down with brakes or are stopping.</string>
 </resources>
