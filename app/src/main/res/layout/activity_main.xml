@@ -50,7 +50,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:drawablePadding="8dp"
+                android:drawablePadding="16dp"
                 android:text="@string/pause_at_low_speed"
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:textColor="?android:attr/textColorSecondary"
@@ -60,7 +60,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:drawablePadding="8dp"
+                android:drawablePadding="16dp"
                 android:text="@string/play_at_high_speed"
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:textColor="?android:attr/textColorSecondary"
@@ -70,7 +70,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:drawablePadding="8dp"
+                android:drawablePadding="16dp"
                 android:text="@string/location_permission_required"
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:textColor="?android:attr/textColorSecondary"
@@ -166,6 +166,7 @@
                                 android:id="@+id/text_selected_activity"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
                                 android:text="@string/n_types" />
                         </LinearLayout>
 
