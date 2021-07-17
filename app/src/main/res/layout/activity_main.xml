@@ -33,25 +33,18 @@
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:textColor="?android:attr/textColorSecondary" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/input_speed"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            <TextView
+                android:id="@+id/text_speed_threshold"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:hint="@string/speed_threshold_title"
-                app:placeholderText="8"
-                app:suffixText="km/h">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edit_speed"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:drawableStart="@drawable/ic_baseline_speed_24"
-                    android:drawablePadding="8dp"
-                    android:inputType="number|numberDecimal" />
-            </com.google.android.material.textfield.TextInputLayout>
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                android:text="@string/n_kph"
+                android:textAlignment="center"
+                android:textAppearance="?attr/textAppearanceHeadline3"
+                android:textColor="?android:attr/textColorPrimary" />
 
             <TextView
                 android:layout_width="wrap_content"

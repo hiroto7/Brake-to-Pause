@@ -39,6 +39,7 @@
     <string name="speed_threshold_key" translatable="false">speed_threshold</string>
     <string name="speed_threshold_title">Speed</string>
     <string name="kph">km/h</string>
+    <string name="n_kph">%d km/h</string>
     <string name="location_permission_required">移動速度の取得のため、位置情報へのアクセス権限が必要です。</string>
     <string name="activity_recognition_permission_required">身体活動データへのアクセス権限が必要です。</string>
     <string name="pause_at_low_speed">Playback is paused when moving slower than the specified speed.</string>

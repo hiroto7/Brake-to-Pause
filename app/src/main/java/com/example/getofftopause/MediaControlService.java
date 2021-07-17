@@ -95,7 +95,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
                 return;
             }
 
-            float speedThresholdKph = sharedPreferences.getFloat(getString(R.string.speed_threshold_key), 8);
+            int speedThresholdKph = sharedPreferences.getInt(getString(R.string.speed_threshold_key), 8);
 
             float lastSpeedMps = location.getSpeed();
             float lastSpeedKph = 3.6f * lastSpeedMps;

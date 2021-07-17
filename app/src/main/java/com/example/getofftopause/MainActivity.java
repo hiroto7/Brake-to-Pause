@@ -10,10 +10,9 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.NumberPicker;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -135,56 +134,35 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         binding.buttonStop.setOnClickListener(this::onStopButtonClicked);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
-        binding.editSpeed.setText(String.valueOf(
-                sharedPreferences.getFloat(
-                        getString(R.string.speed_threshold_key), 8)));
-        binding.editSpeed.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        binding.textSpeedThreshold.setOnClickListener(v -> {
+            NumberPicker numberPicker = new NumberPicker(this);
+            numberPicker.setMinValue(1);
+            numberPicker.setMaxValue(30);
+            numberPicker.setWrapSelectorWheel(false);
+            numberPicker.setValue(sharedPreferences.getInt(getString(R.string.speed_threshold_key), 8));
 
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (!s.toString().matches("^(?:[0-9]+(?:\\.[0-9]*)?|[0-9]*\\.[0-9]+)$")) {
-                    return;
-                }
-
-                sharedPreferences
-                        .edit()
-                        .putFloat(getString(R.string.speed_threshold_key), Float.parseFloat(s.toString()))
-                        .apply();
-            }
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.speed_threshold_title)
+                    .setMessage(R.string.kph)
+                    .setView(numberPicker)
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                        sharedPreferences
+                                .edit()
+                                .putInt(getString(R.string.speed_threshold_key), numberPicker.getValue())
+                                .apply();
+                        binding.textSpeedThreshold.setText(getString(R.string.n_kph, numberPicker.getValue()));
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
         });
+        binding.textSpeedThreshold.setText(getString(R.string.n_kph, sharedPreferences.getInt(getString(R.string.speed_threshold_key), 8)));
 
-        boolean usesActivityRecognition = sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true);
-        binding.switchActivityRecognition.setChecked(usesActivityRecognition);
-        if (usesActivityRecognition) {
-            binding.layout.setVisibility(View.VISIBLE);
-            binding.divider.setVisibility(View.VISIBLE);
-        } else {
-            binding.layout.setVisibility(View.GONE);
-            binding.divider.setVisibility(View.GONE);
-        }
+        updateUsesActivityRecognition();
 
-        binding.switchActivityRecognition.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            sharedPreferences
-                    .edit()
-                    .putBoolean(getString(R.string.activity_recognition_key), isChecked)
-                    .apply();
-            if (isChecked) {
-                binding.layout.setVisibility(View.VISIBLE);
-                binding.divider.setVisibility(View.VISIBLE);
-            } else {
-                binding.layout.setVisibility(View.GONE);
-                binding.divider.setVisibility(View.GONE);
-            }
-        });
+        binding.switchActivityRecognition.setOnCheckedChangeListener((buttonView, isChecked) -> sharedPreferences
+                .edit()
+                .putBoolean(getString(R.string.activity_recognition_key), isChecked)
+                .apply());
 
         binding.layout.setOnClickListener(v -> {
             Map<Activity, Boolean> map = new HashMap<>();
@@ -197,9 +175,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         activities.forEach(activity -> editor.putBoolean(activity.key, map.get(activity)));
                         editor.apply();
                     })
-                    .setNeutralButton("cancel", (dialog, which) -> {
-
-                    })
+                    .setNeutralButton("cancel", null)
                     .setMultiChoiceItems(
                             activities.stream().map(activity -> activity.title).toArray(String[]::new),
                             ArrayUtils.toPrimitive(activities.stream().map(activity -> sharedPreferences.getBoolean(activity.key, true)).<Boolean>toArray(Boolean[]::new)),
@@ -225,6 +201,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             updateSelectedActivity();
         }
 
+        if (key.equals(getString(R.string.activity_recognition_key))) {
+            updateUsesActivityRecognition();
+        }
+
         if (Arrays.asList(
                 getString(R.string.location_key),
                 getString(R.string.activity_recognition_key),
@@ -233,6 +213,18 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 getString(R.string.running_key),
                 getString(R.string.walking_key)).contains(key)) {
             maybeEnableStartButton();
+        }
+    }
+
+    private void updateUsesActivityRecognition() {
+        boolean usesActivityRecognition = sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true);
+        binding.switchActivityRecognition.setChecked(usesActivityRecognition);
+        if (usesActivityRecognition) {
+            binding.layout.setVisibility(View.VISIBLE);
+            binding.divider.setVisibility(View.VISIBLE);
+        } else {
+            binding.layout.setVisibility(View.GONE);
+            binding.divider.setVisibility(View.GONE);
         }
     }
 
