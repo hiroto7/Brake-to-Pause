@@ -64,15 +64,17 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     private AudioManager audioManager;
     private NotificationManager notificationManager;
     private ActivityRecognitionClient activityRecognitionClient;
-    private boolean enabled;
+    private boolean enabled = false;
     private final Handler handler = new Handler();
     private boolean usesLocation;
     private boolean usesActivityRecognition;
-    private boolean hasAudioFocus;
-    private boolean timerInProgress;
+    private boolean hasAudioFocus = false;
+    private boolean timerInProgress = false;
     private List<Integer> selectedActivities;
-    private NotificationCompat.Builder notificationBuilder;
     private PendingIntent mainPendingIntent;
+    private Notification controllingPlaybackNotification;
+    private Notification playbackResumedNotification;
+    private Notification playbackPausedNotification;
     private final Runnable stopMediaControlWithNotificationCallback = () -> {
         stopMediaControl();
 
@@ -163,10 +165,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             audioManager.requestAudioFocus(focusRequest);
             hasAudioFocus = true;
 
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder
-                    .setContentTitle(getText(R.string.paused_media))
-                    .setSmallIcon(R.drawable.ic_baseline_pause_24)
-                    .build());
+            notificationManager.notify(NOTIFICATION_ID, playbackPausedNotification);
         }
 
         if (!timerInProgress) {
@@ -182,10 +181,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
         if (timerInProgress) {
             stopTimer();
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder
-                    .setContentTitle(getText(R.string.playing_media))
-                    .setSmallIcon(R.drawable.ic_baseline_play_arrow_24)
-                    .build());
+            notificationManager.notify(NOTIFICATION_ID, playbackResumedNotification);
         }
     }
 
@@ -283,7 +279,31 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         Intent intent = new Intent(ACTION_TRANSITION);
         transitionPendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        enabled = false;
+        Intent mainIntent = new Intent(this, MainActivity.class);
+        mainPendingIntent = PendingIntent.getActivity(this, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent stopIntent = new Intent(ACTION_STOP_MEDIA_CONTROL);
+        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, MEDIA_CONTROL_CHANNEL_ID)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setContentIntent(mainPendingIntent)
+                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.exit_playback_control), stopPendingIntent);
+
+        controllingPlaybackNotification = notificationBuilder
+                .setContentTitle(getString(R.string.enabled_playback_control))
+                .setSmallIcon(R.drawable.ic_baseline_music_note_24)
+                .build();
+
+        playbackPausedNotification = notificationBuilder
+                .setContentTitle(getText(R.string.paused_media))
+                .setSmallIcon(R.drawable.ic_baseline_pause_24)
+                .build();
+
+        playbackResumedNotification = notificationBuilder
+                .setContentTitle(getText(R.string.playing_media))
+                .setSmallIcon(R.drawable.ic_baseline_play_arrow_24)
+                .build();
     }
 
     @Override
@@ -292,28 +312,12 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
         createNotificationChannel();
 
-        Intent mainIntent = new Intent(this, MainActivity.class);
-        mainPendingIntent = PendingIntent.getActivity(this, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        Intent stopIntent = new Intent(ACTION_STOP_MEDIA_CONTROL);
-        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        notificationBuilder = new NotificationCompat.Builder(this, MEDIA_CONTROL_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_baseline_music_note_24)
-                .setContentTitle(getString(R.string.enabled_playback_control))
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setContentIntent(mainPendingIntent)
-                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.exit_playback_control), stopPendingIntent);
-        startForeground(NOTIFICATION_ID, notificationBuilder.build());
-
+        startForeground(NOTIFICATION_ID, hasAudioFocus ? playbackPausedNotification : controllingPlaybackNotification);
+        startTimer();
         registerReceiver(stopReceiver, new IntentFilter(ACTION_STOP_MEDIA_CONTROL));
 
         usesLocation = sharedPreferences.getBoolean(getString(R.string.location_key), true);
         usesActivityRecognition = sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true);
-
-        hasAudioFocus = false;
-
-        startTimer();
 
         selectedActivities = new LinkedList<>();
         if (sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true)) {
@@ -371,10 +375,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             return;
         }
 
-        notificationManager.notify(NOTIFICATION_ID, notificationBuilder
-                .setContentTitle(getText(R.string.enabled_playback_control))
-                .setSmallIcon(R.drawable.ic_baseline_music_note_24)
-                .build());
+        notificationManager.notify(NOTIFICATION_ID, controllingPlaybackNotification);
     }
 
     public void setOnMediaControlStartedListener(@Nullable Runnable onMediaControlStartedListener) {
