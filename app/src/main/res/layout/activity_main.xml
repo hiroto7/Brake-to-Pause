@@ -248,7 +248,7 @@
         android:backgroundTint="@color/mtrl_fab_bg_color_selector_primary"
         android:clickable="true"
         android:enabled="false"
-        android:text="@string/start_media_control"
+        android:text="@string/start_playback_control"
         android:textColor="@color/mtrl_fab_icon_text_color_selector_primary"
         android:visibility="gone"
         app:icon="@drawable/ic_baseline_music_note_24"
@@ -264,7 +264,7 @@
         android:layout_margin="16dp"
         android:clickable="true"
         android:enabled="false"
-        android:text="@string/exit_media_control"
+        android:text="@string/exit_playback_control"
         android:visibility="gone"
         app:icon="@drawable/ic_baseline_stop_24"
         app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />

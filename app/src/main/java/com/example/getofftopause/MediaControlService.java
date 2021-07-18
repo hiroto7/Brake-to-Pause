@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 public class MediaControlService extends Service implements AudioManager.OnAudioFocusChangeListener {
 
     private static final int NOTIFICATION_ID = 1;
+    private static final int DELAY_MILLIS = 60 * 30 * 1000;
     private static final String TAG = "MediaControlService";
     private static final String ACTION_TRANSITION = MediaControlService.class.getCanonicalName() + ".ACTION_TRANSITION";
     private static final String ACTION_STOP_MEDIA_CONTROL = MediaControlService.class.getCanonicalName() + ".ACTION_STOP_MEDIA_CONTROL";
@@ -68,6 +69,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     private boolean usesLocation;
     private boolean usesActivityRecognition;
     private boolean hasAudioFocus;
+    private boolean timerInProgress;
     private List<Integer> selectedActivities;
     private NotificationCompat.Builder notificationBuilder;
     private PendingIntent mainPendingIntent;
@@ -76,7 +78,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
         Notification notification = new NotificationCompat.Builder(this, AUTOMATIC_STOP_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_stop_24)
-                .setContentTitle(getString(R.string.media_control_automatically_ended))
+                .setContentTitle(getString(R.string.playback_control_automatically_ended))
                 .setContentText(getString(R.string.time_has_passed_with_media_paused))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(mainPendingIntent)
@@ -101,9 +103,9 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             float lastSpeedKph = 3.6f * lastSpeedMps;
 
             if (lastSpeedKph < speedThresholdKph) {
-                requestAudioFocus();
+                pausePlayback();
             } else {
-                abandonAudioFocusRequest();
+                resumePlayback();
             }
         }
     };
@@ -120,11 +122,11 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
                 if (selectedActivities.contains(event.getActivityType()) && event.getTransitionType() == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
                     requestLocationUpdates();
                     if (!usesLocation) {
-                        abandonAudioFocusRequest();
+                        resumePlayback();
                     }
                 } else {
                     removeLocationUpdates();
-                    requestAudioFocus();
+                    pausePlayback();
                 }
             }
         }
@@ -146,36 +148,45 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         return enabled;
     }
 
-    private void requestAudioFocus() {
-        if (hasAudioFocus) {
-            return;
-        }
-
-        handler.postDelayed(stopMediaControlWithNotificationCallback, 60 * 30 * 1000);
-
-        notificationManager.notify(NOTIFICATION_ID, notificationBuilder
-                .setContentTitle(getText(R.string.paused_media))
-                .setSmallIcon(R.drawable.ic_baseline_pause_24)
-                .build());
-
-        audioManager.requestAudioFocus(focusRequest);
-        hasAudioFocus = true;
+    private void startTimer() {
+        handler.postDelayed(stopMediaControlWithNotificationCallback, DELAY_MILLIS);
+        timerInProgress = true;
     }
 
-    private void abandonAudioFocusRequest() {
+    private void stopTimer() {
+        handler.removeCallbacks(stopMediaControlWithNotificationCallback);
+        timerInProgress = false;
+    }
+
+    private void pausePlayback() {
         if (!hasAudioFocus) {
-            return;
+            audioManager.requestAudioFocus(focusRequest);
+            hasAudioFocus = true;
+
+            notificationManager.notify(NOTIFICATION_ID, notificationBuilder
+                    .setContentTitle(getText(R.string.paused_media))
+                    .setSmallIcon(R.drawable.ic_baseline_pause_24)
+                    .build());
         }
 
-        handler.removeCallbacks(stopMediaControlWithNotificationCallback);
+        if (!timerInProgress) {
+            startTimer();
+        }
+    }
 
-        notificationManager.notify(NOTIFICATION_ID, notificationBuilder
-                .setContentTitle(getText(R.string.playing_media))
-                .setSmallIcon(R.drawable.ic_baseline_play_arrow_24)
-                .build());
+    private void resumePlayback() {
+        if (hasAudioFocus) {
+            audioManager.abandonAudioFocusRequest(focusRequest);
+            hasAudioFocus = false;
+        }
 
-        audioManager.abandonAudioFocusRequest(focusRequest);
-        hasAudioFocus = false;
+        if (timerInProgress) {
+            stopTimer();
+            notificationManager.notify(NOTIFICATION_ID, notificationBuilder
+                    .setContentTitle(getText(R.string.playing_media))
+                    .setSmallIcon(R.drawable.ic_baseline_play_arrow_24)
+                    .build());
+        }
     }
 
     private void requestLocationUpdates() {
@@ -203,7 +214,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
     private void createNotificationChannel() {
         List<NotificationChannel> channels = Arrays.asList(
-                new NotificationChannel(MEDIA_CONTROL_CHANNEL_ID, getString(R.string.media_control), NotificationManager.IMPORTANCE_LOW),
+                new NotificationChannel(MEDIA_CONTROL_CHANNEL_ID, getString(R.string.playback_control), NotificationManager.IMPORTANCE_LOW),
                 new NotificationChannel(AUTOMATIC_STOP_CHANNEL_ID, getString(R.string.automatic_exit), NotificationManager.IMPORTANCE_DEFAULT));
         notificationManager.createNotificationChannels(channels);
     }
@@ -243,7 +254,10 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
     public void stopMediaControl() {
         unregisterReceiver(stopReceiver);
-        handler.removeCallbacks(stopMediaControlWithNotificationCallback);
+
+        if (timerInProgress) {
+            stopTimer();
+        }
 
         removeLocationUpdates();
         removeActivityTransitionUpdates();
@@ -286,10 +300,10 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
         notificationBuilder = new NotificationCompat.Builder(this, MEDIA_CONTROL_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_music_note_24)
-                .setContentTitle(getString(R.string.enabled_media_control))
+                .setContentTitle(getString(R.string.enabled_playback_control))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(mainPendingIntent)
-                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.exit_media_control), stopPendingIntent);
+                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.exit_playback_control), stopPendingIntent);
         startForeground(NOTIFICATION_ID, notificationBuilder.build());
 
         registerReceiver(stopReceiver, new IntentFilter(ACTION_STOP_MEDIA_CONTROL));
@@ -298,6 +312,8 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         usesActivityRecognition = sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true);
 
         hasAudioFocus = false;
+
+        startTimer();
 
         selectedActivities = new LinkedList<>();
         if (sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true)) {
@@ -355,10 +371,8 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             return;
         }
 
-        handler.removeCallbacks(stopMediaControlWithNotificationCallback);
-
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder
-                .setContentTitle(getText(R.string.enabled_media_control))
+                .setContentTitle(getText(R.string.enabled_playback_control))
                 .setSmallIcon(R.drawable.ic_baseline_music_note_24)
                 .build());
     }

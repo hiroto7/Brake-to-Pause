@@ -1,17 +1,17 @@
 <resources>
     <string name="permission_denied">アクセスが拒否されました</string>
 
-    <string name="start_media_control">再生状態の制御を開始</string>
-    <string name="exit_media_control">再生状態の制御を終了</string>
+    <string name="start_playback_control">再生状態の制御を開始</string>
+    <string name="exit_playback_control">再生状態の制御を終了</string>
 
-    <string name="media_control">再生状態の制御</string>
-    <string name="enabled_media_control">再生状態を制御中</string>
-    <string name="playing_media">再生を再開しました</string>
+    <string name="playback_control">再生状態の制御</string>
+    <string name="enabled_playback_control">再生状態を制御中</string>
+    <string name="playing_media">再生中</string>
     <string name="paused_media">再生を一時停止中</string>
 
     <string name="automatic_exit">再生状態の制御の自動終了</string>
-    <string name="media_control_automatically_ended">再生状態の制御を自動終了しました</string>
-    <string name="time_has_passed_with_media_paused">一時停止のまま30分が経過しました</string>
+    <string name="playback_control_automatically_ended">再生状態の制御を自動終了しました</string>
+    <string name="time_has_passed_with_media_paused">再生を一時停止してから30分が経過しました</string>
 
     <string name="activity_recognition_header">メインのアクティビティ</string>
 
@@ -20,7 +20,7 @@
     <string name="running_title">ランニング</string>
     <string name="walking_title">ウォーキング</string>
     <string name="change_button_text">変更</string>
-    <string name="n_types_selected">%d 種類を選択:</string>
+    <string name="n_types_selected">%d 種類を選択中:</string>
 
     <string name="speed_threshold_title">指定した速度で再生状態を切り替え</string>
     <string name="kph">km/h</string>
