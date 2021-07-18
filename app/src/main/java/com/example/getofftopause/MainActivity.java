@@ -234,10 +234,17 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         List<Activity> selectedActivities = activities.stream().filter(activity -> sharedPreferences.getBoolean(activity.key, true)).collect(Collectors.toList());
         selectedActivities.forEach(activity -> activity.imageView.setVisibility(View.VISIBLE));
 
-        binding.textSelectedActivity.setText(
-                selectedActivities.size() == 1 ?
-                        selectedActivities.get(0).title :
-                        getString(R.string.n_types, selectedActivities.size()));
+        if (selectedActivities.size() == 1) {
+            binding.textSelectedActivity.setVisibility(View.VISIBLE);
+            binding.textSelectedActivityCount.setVisibility(View.GONE);
+
+            binding.textSelectedActivity.setText(selectedActivities.get(0).title);
+        } else {
+            binding.textSelectedActivity.setVisibility(View.GONE);
+            binding.textSelectedActivityCount.setVisibility(View.VISIBLE);
+
+            binding.textSelectedActivityCount.setText(getString(R.string.n_types_selected, selectedActivities.size()));
+        }
     }
 
     private class Activity {

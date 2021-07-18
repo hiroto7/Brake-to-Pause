@@ -20,7 +20,7 @@
     <string name="running_title">ランニング</string>
     <string name="walking_title">ウォーキング</string>
     <string name="change_button_text">変更</string>
-    <string name="n_types">%d 種類</string>
+    <string name="n_types_selected">%d 種類を選択:</string>
 
     <string name="speed_threshold_title">指定した速度で再生状態を切り替え</string>
     <string name="kph">km/h</string>
