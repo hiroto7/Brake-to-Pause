@@ -5,8 +5,7 @@
     <string name="exit_playback_control">再生状態の制御を終了</string>
 
     <string name="playback_control">再生状態の制御</string>
-    <string name="enabled_playback_control">再生状態を制御中</string>
-    <string name="playing_media">再生中</string>
+    <string name="controlling_playback_state">再生状態を制御中</string>
     <string name="paused_media">再生を一時停止中</string>
 
     <string name="automatic_exit">再生状態の制御の自動終了</string>

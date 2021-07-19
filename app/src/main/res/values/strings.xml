@@ -7,8 +7,7 @@
     <string name="exit_playback_control">Exit playback control</string>
 
     <string name="playback_control">Playback control</string>
-    <string name="enabled_playback_control">Controlling playback</string>
-    <string name="playing_media">Playing</string>
+    <string name="controlling_playback_state">Controlling the playback state</string>
     <string name="paused_media">Playback is paused</string>
 
     <string name="automatic_exit">Automatic exit of media control</string>
@@ -20,6 +19,7 @@
     <string name="activity_recognition_key" translatable="false">activity_recognition</string>
     <string name="activity_recognition_summary_1">指定したアクティビティの間だけ、移動速度に応じて再生状態を制御します。</string>
     <string name="activity_recognition_summary_2">それ以外のときは一時停止にします。このとき移動速度を取得しないため、バッテリーを節約できます。</string>
+    <string name="activity_recognition_permission_required">身体活動データへのアクセス権限が必要です。</string>
 
     <string name="in_vehicle_key" translatable="false">in_vehicle</string>
     <string name="on_bicycle_key" translatable="false">on_bicycle</string>
@@ -36,11 +36,10 @@
     <string name="location_key" translatable="false">location</string>
 
     <string name="speed_threshold_key" translatable="false">speed_threshold</string>
-    <string name="speed_threshold_title">Switch playback state at the specified speed</string>
+    <string name="speed_threshold_title">Switch between play and pause at the specified speed</string>
     <string name="kph">km/h</string>
     <string name="n_kph">%d km/h</string>
     <string name="location_permission_required">移動速度の取得のため、位置情報へのアクセス権限が必要です。</string>
-    <string name="activity_recognition_permission_required">身体活動データへのアクセス権限が必要です。</string>
     <string name="pause_at_low_speed">Playback is paused when moving slower than the specified speed.</string>
     <string name="play_at_high_speed">Playback is resumed when moving faster than the specified speed.</string>
     <string name="speed_summary">Automatically pause playback of media such as music only when you slow down with brakes or are stopping.</string>

@@ -73,7 +73,6 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     private List<Integer> selectedActivities;
     private PendingIntent mainPendingIntent;
     private Notification controllingPlaybackNotification;
-    private Notification playbackResumedNotification;
     private Notification playbackPausedNotification;
     private final Runnable stopMediaControlWithNotificationCallback = () -> {
         stopMediaControl();
@@ -122,12 +121,16 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
             for (ActivityTransitionEvent event : result.getTransitionEvents()) {
                 if (selectedActivities.contains(event.getActivityType()) && event.getTransitionType() == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
-                    requestLocationUpdates();
-                    if (!usesLocation) {
+                    if (usesLocation) {
+                        requestLocationUpdates();
+                    } else {
                         resumePlayback();
                     }
                 } else {
-                    removeLocationUpdates();
+                    if (usesLocation) {
+                        removeLocationUpdates();
+                    }
+
                     pausePlayback();
                 }
             }
@@ -164,7 +167,6 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         if (!hasAudioFocus) {
             audioManager.requestAudioFocus(focusRequest);
             hasAudioFocus = true;
-
             notificationManager.notify(NOTIFICATION_ID, playbackPausedNotification);
         }
 
@@ -177,19 +179,15 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         if (hasAudioFocus) {
             audioManager.abandonAudioFocusRequest(focusRequest);
             hasAudioFocus = false;
+            notificationManager.notify(NOTIFICATION_ID, controllingPlaybackNotification);
         }
 
         if (timerInProgress) {
             stopTimer();
-            notificationManager.notify(NOTIFICATION_ID, playbackResumedNotification);
         }
     }
 
     private void requestLocationUpdates() {
-        if (!usesLocation) {
-            return;
-        }
-
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
@@ -201,10 +199,6 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     }
 
     private void removeLocationUpdates() {
-        if (!usesLocation) {
-            return;
-        }
-
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 
@@ -216,10 +210,6 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     }
 
     private void requestActivityTransitionUpdates() {
-        if (!usesActivityRecognition) {
-            return;
-        }
-
         registerReceiver(transitionsReceiver, new IntentFilter(ACTION_TRANSITION));
 
         List<Integer> activityTypes = Arrays.asList(
@@ -240,25 +230,25 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     }
 
     private void removeActivityTransitionUpdates() {
-        if (!usesActivityRecognition) {
-            return;
-        }
-
         unregisterReceiver(transitionsReceiver);
         activityRecognitionClient.removeActivityTransitionUpdates(transitionPendingIntent);
     }
 
     public void stopMediaControl() {
         unregisterReceiver(stopReceiver);
+        stopForeground(true);
 
         if (timerInProgress) {
             stopTimer();
         }
 
-        removeLocationUpdates();
-        removeActivityTransitionUpdates();
+        if (usesLocation) {
+            removeLocationUpdates();
+        }
 
-        stopForeground(true);
+        if (usesActivityRecognition) {
+            removeActivityTransitionUpdates();
+        }
 
         enabled = false;
         if (onMediaControlStoppedListener != null) {
@@ -291,18 +281,13 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
                 .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.exit_playback_control), stopPendingIntent);
 
         controllingPlaybackNotification = notificationBuilder
-                .setContentTitle(getString(R.string.enabled_playback_control))
-                .setSmallIcon(R.drawable.ic_baseline_music_note_24)
+                .setContentTitle(getString(R.string.controlling_playback_state))
+                .setSmallIcon(R.drawable.ic_baseline_play_arrow_24)
                 .build();
 
         playbackPausedNotification = notificationBuilder
                 .setContentTitle(getText(R.string.paused_media))
                 .setSmallIcon(R.drawable.ic_baseline_pause_24)
-                .build();
-
-        playbackResumedNotification = notificationBuilder
-                .setContentTitle(getText(R.string.playing_media))
-                .setSmallIcon(R.drawable.ic_baseline_play_arrow_24)
                 .build();
     }
 
@@ -333,8 +318,13 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             selectedActivities.add(DetectedActivity.WALKING);
         }
 
-        requestLocationUpdates();
-        requestActivityTransitionUpdates();
+        if (usesLocation) {
+            requestLocationUpdates();
+        }
+
+        if (usesActivityRecognition) {
+            requestActivityTransitionUpdates();
+        }
 
         enabled = true;
         if (onMediaControlStartedListener != null) {
