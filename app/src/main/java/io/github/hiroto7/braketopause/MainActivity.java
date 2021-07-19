@@ -1,4 +1,4 @@
-package com.example.getofftopause;
+package io.github.hiroto7.braketopause;
 
 import android.Manifest;
 import android.content.ComponentName;
@@ -21,7 +21,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.preference.PreferenceManager;
 
-import com.example.getofftopause.databinding.ActivityMainBinding;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -34,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.github.hiroto7.braketopause.databinding.ActivityMainBinding;
+
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = "MainActivity";
@@ -44,6 +45,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private ActivityMainBinding binding;
     private Intent intent;
     private SharedPreferences sharedPreferences;
+    private MediaControlService mediaControlService;
+    private List<Activity> activities;
     private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                 setStarting(false);
@@ -55,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
                 startForegroundService(intent);
             });
-    private MediaControlService mediaControlService;
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -93,8 +95,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
         maybeEnableStartButton();
     }
-
-    private List<Activity> activities;
 
     @Override
     protected void onPause() {
@@ -247,18 +247,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     }
 
-    private class Activity {
-        final public String key;
-        final public String title;
-        final public ImageView imageView;
-
-        Activity(int keyResId, int titleResId, ImageView imageView) {
-            this.key = getString(keyResId);
-            this.title = getString(titleResId);
-            this.imageView = imageView;
-        }
-    }
-
     private void onStopButtonClicked(View v) {
         binding.buttonStop.setEnabled(false);
         mediaControlService.stopMediaControl();
@@ -286,5 +274,17 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
 
         startForegroundService(intent);
+    }
+
+    private class Activity {
+        final public String key;
+        final public String title;
+        final public ImageView imageView;
+
+        Activity(int keyResId, int titleResId, ImageView imageView) {
+            this.key = getString(keyResId);
+            this.title = getString(titleResId);
+            this.imageView = imageView;
+        }
     }
 }

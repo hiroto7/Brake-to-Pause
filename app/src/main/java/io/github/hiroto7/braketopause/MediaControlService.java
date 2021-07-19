@@ -1,4 +1,4 @@
-package com.example.getofftopause;
+package io.github.hiroto7.braketopause;
 
 import android.Manifest;
 import android.app.Notification;
@@ -59,13 +59,13 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
                     .setOnAudioFocusChangeListener(this)
                     .build();
     private final IBinder binder = new MediaControlBinder();
+    private final Handler handler = new Handler();
     private SharedPreferences sharedPreferences;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private AudioManager audioManager;
     private NotificationManager notificationManager;
     private ActivityRecognitionClient activityRecognitionClient;
     private boolean enabled = false;
-    private final Handler handler = new Handler();
     private boolean usesLocation;
     private boolean usesActivityRecognition;
     private boolean hasAudioFocus = false;
@@ -74,20 +74,6 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
     private PendingIntent mainPendingIntent;
     private Notification controllingPlaybackNotification;
     private Notification playbackPausedNotification;
-    private final Runnable stopMediaControlWithNotificationCallback = () -> {
-        stopMediaControl();
-
-        Notification notification = new NotificationCompat.Builder(this, AUTOMATIC_STOP_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_baseline_stop_24)
-                .setContentTitle(getString(R.string.playback_control_automatically_ended))
-                .setContentText(getString(R.string.time_has_passed_with_media_paused))
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setContentIntent(mainPendingIntent)
-                .setAutoCancel(true)
-                .build();
-
-        notificationManager.notify(NOTIFICATION_ID, notification);
-    };
     private final LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
@@ -147,6 +133,20 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
             stopMediaControl();
             stopSelf();
         }
+    };
+    private final Runnable stopMediaControlWithNotificationCallback = () -> {
+        stopMediaControl();
+
+        Notification notification = new NotificationCompat.Builder(this, AUTOMATIC_STOP_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_baseline_stop_24)
+                .setContentTitle(getString(R.string.playback_control_automatically_ended))
+                .setContentText(getString(R.string.time_has_passed_with_media_paused))
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setContentIntent(mainPendingIntent)
+                .setAutoCancel(true)
+                .build();
+
+        notificationManager.notify(NOTIFICATION_ID, notification);
     };
 
     public boolean isEnabled() {

@@ -1,4 +1,4 @@
-package com.example.getofftopause;
+package io.github.hiroto7.braketopause;
 
 import org.junit.Test;
 

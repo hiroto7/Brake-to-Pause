@@ -1,4 +1,4 @@
-package com.example.getofftopause;
+package io.github.hiroto7.braketopause;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.example.getofftopause", appContext.getPackageName());
+        assertEquals("io.github.hiroto7.braketopause", appContext.getPackageName());
     }
 }
