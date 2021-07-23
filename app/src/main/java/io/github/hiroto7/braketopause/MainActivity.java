@@ -19,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -31,7 +32,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import io.github.hiroto7.braketopause.databinding.ActivityMainBinding;
 
@@ -127,6 +127,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         View view = binding.getRoot();
         setContentView(view);
 
+        MainViewModel model = new ViewModelProvider(this).get(MainViewModel.class);
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         intent = new Intent(getApplication(), MediaControlService.class);
 
@@ -139,25 +141,60 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             numberPicker.setMinValue(1);
             numberPicker.setMaxValue(30);
             numberPicker.setWrapSelectorWheel(false);
-            numberPicker.setValue(sharedPreferences.getInt(getString(R.string.speed_threshold_key), 8));
+            numberPicker.setValue(model.getSpeedThreshold().getValue());
 
             new AlertDialog.Builder(this)
                     .setTitle(R.string.speed_threshold_title)
                     .setMessage(R.string.kph)
                     .setView(numberPicker)
-                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                        sharedPreferences
-                                .edit()
-                                .putInt(getString(R.string.speed_threshold_key), numberPicker.getValue())
-                                .apply();
-                        binding.textSpeedThreshold.setText(getString(R.string.n_kph, numberPicker.getValue()));
-                    })
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> sharedPreferences
+                            .edit()
+                            .putInt(getString(R.string.speed_threshold_key), numberPicker.getValue())
+                            .apply())
                     .setNegativeButton(android.R.string.cancel, null)
                     .show();
         });
-        binding.textSpeedThreshold.setText(getString(R.string.n_kph, sharedPreferences.getInt(getString(R.string.speed_threshold_key), 8)));
 
-        updateUsesActivityRecognition();
+        model.getSpeedThreshold().observe(this, speedThreshold -> binding.textSpeedThreshold.setText(getString(R.string.n_kph, speedThreshold)));
+
+        model.getInVehicle().observe(this, flag -> {
+            binding.imageInVehicle.setVisibility(flag ? View.VISIBLE : View.GONE);
+            binding.textInVehicle.setVisibility(flag ? View.VISIBLE : View.GONE);
+        });
+        model.getOnBicycle().observe(this, flag -> {
+            binding.imageOnBicycle.setVisibility(flag ? View.VISIBLE : View.GONE);
+            binding.textOnBicycle.setVisibility(flag ? View.VISIBLE : View.GONE);
+        });
+        model.getRunning().observe(this, flag -> {
+            binding.imageRunning.setVisibility(flag ? View.VISIBLE : View.GONE);
+            binding.textRunning.setVisibility(flag ? View.VISIBLE : View.GONE);
+        });
+        model.getWalking().observe(this, flag -> {
+            binding.imageWalking.setVisibility(flag ? View.VISIBLE : View.GONE);
+            binding.textWalking.setVisibility(flag ? View.VISIBLE : View.GONE);
+        });
+
+        model.getSelectedActivityCount().observe(this, count -> {
+            binding.textSelectedActivityCount.setText(getString(R.string.n_types_selected, count));
+            if (count > 1) {
+                binding.viewMultiSelectedActivities.setVisibility(View.VISIBLE);
+                binding.viewSingleSelectedActivity.setVisibility(View.GONE);
+            } else {
+                binding.viewMultiSelectedActivities.setVisibility(View.GONE);
+                binding.viewSingleSelectedActivity.setVisibility(View.VISIBLE);
+            }
+        });
+
+        model.getUsesActivityRecognition().observe(this, usesActivityRecognition -> {
+            binding.switchActivityRecognition.setChecked(usesActivityRecognition);
+            if (usesActivityRecognition) {
+                binding.layout.setVisibility(View.VISIBLE);
+                binding.divider.setVisibility(View.VISIBLE);
+            } else {
+                binding.layout.setVisibility(View.GONE);
+                binding.divider.setVisibility(View.GONE);
+            }
+        });
 
         binding.switchActivityRecognition.setOnCheckedChangeListener((buttonView, isChecked) -> sharedPreferences
                 .edit()
@@ -192,19 +229,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 new Activity(R.string.running_key, R.string.running_title, binding.imageRunning),
                 new Activity(R.string.walking_key, R.string.walking_title, binding.imageWalking));
 
-        updateSelectedActivity();
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (activities.stream().anyMatch(activity -> activity.key.equals(key))) {
-            updateSelectedActivity();
-        }
-
-        if (key.equals(getString(R.string.activity_recognition_key))) {
-            updateUsesActivityRecognition();
-        }
-
         if (Arrays.asList(
                 getString(R.string.location_key),
                 getString(R.string.activity_recognition_key),
@@ -213,37 +241,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 getString(R.string.running_key),
                 getString(R.string.walking_key)).contains(key)) {
             maybeEnableStartButton();
-        }
-    }
-
-    private void updateUsesActivityRecognition() {
-        boolean usesActivityRecognition = sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true);
-        binding.switchActivityRecognition.setChecked(usesActivityRecognition);
-        if (usesActivityRecognition) {
-            binding.layout.setVisibility(View.VISIBLE);
-            binding.divider.setVisibility(View.VISIBLE);
-        } else {
-            binding.layout.setVisibility(View.GONE);
-            binding.divider.setVisibility(View.GONE);
-        }
-    }
-
-    private void updateSelectedActivity() {
-        activities.forEach(activity -> activity.imageView.setVisibility(View.GONE));
-
-        List<Activity> selectedActivities = activities.stream().filter(activity -> sharedPreferences.getBoolean(activity.key, true)).collect(Collectors.toList());
-        selectedActivities.forEach(activity -> activity.imageView.setVisibility(View.VISIBLE));
-
-        if (selectedActivities.size() == 1) {
-            binding.textSelectedActivity.setVisibility(View.VISIBLE);
-            binding.textSelectedActivityCount.setVisibility(View.GONE);
-
-            binding.textSelectedActivity.setText(selectedActivities.get(0).title);
-        } else {
-            binding.textSelectedActivity.setVisibility(View.GONE);
-            binding.textSelectedActivityCount.setVisibility(View.VISIBLE);
-
-            binding.textSelectedActivityCount.setText(getString(R.string.n_types_selected, selectedActivities.size()));
         }
     }
 
