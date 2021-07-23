@@ -35,7 +35,7 @@ import java.util.Map;
 
 import io.github.hiroto7.braketopause.databinding.ActivityMainBinding;
 
-public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
@@ -111,13 +111,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private void maybeEnableStartButton() {
-        if (enabled || starting) {
-            binding.buttonStart.setEnabled(false);
-        } else if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)) {
-            binding.buttonStart.setEnabled(activities.stream().anyMatch(activity -> sharedPreferences.getBoolean(activity.key, true)));
-        } else {
-            binding.buttonStart.setEnabled(sharedPreferences.getBoolean(getString(R.string.location_key), true));
-        }
+        binding.buttonStart.setEnabled(!enabled && !starting);
     }
 
     @Override
@@ -134,7 +128,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         binding.buttonStart.setOnClickListener(this::onStartButtonClicked);
         binding.buttonStop.setOnClickListener(this::onStopButtonClicked);
-        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
         binding.textSpeedThreshold.setOnClickListener(v -> {
             NumberPicker numberPicker = new NumberPicker(this);
@@ -229,19 +222,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 new Activity(R.string.running_key, R.string.running_title, binding.imageRunning),
                 new Activity(R.string.walking_key, R.string.walking_title, binding.imageWalking));
 
-    }
-
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (Arrays.asList(
-                getString(R.string.location_key),
-                getString(R.string.activity_recognition_key),
-                getString(R.string.in_vehicle_key),
-                getString(R.string.on_bicycle_key),
-                getString(R.string.running_key),
-                getString(R.string.walking_key)).contains(key)) {
-            maybeEnableStartButton();
-        }
     }
 
     private void onStopButtonClicked(View v) {
