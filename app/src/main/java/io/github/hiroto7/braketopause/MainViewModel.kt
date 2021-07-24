@@ -8,24 +8,57 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 
-class MainViewModel(application: Application) : AndroidViewModel(application), SharedPreferences.OnSharedPreferenceChangeListener {
+class MainViewModel(application: Application) : AndroidViewModel(application),
+    SharedPreferences.OnSharedPreferenceChangeListener {
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application)
 
-    val speedThreshold = MutableLiveData(sharedPreferences.getInt(application.getString(R.string.speed_threshold_key), 8))
+    val speedThreshold = MutableLiveData(
+        sharedPreferences.getInt(
+            application.getString(R.string.speed_threshold_key),
+            8
+        )
+    )
 
-    val inVehicle = MutableLiveData(sharedPreferences.getBoolean(application.getString(R.string.in_vehicle_key), true))
-    val onBicycle = MutableLiveData(sharedPreferences.getBoolean(application.getString(R.string.on_bicycle_key), true))
-    val running = MutableLiveData(sharedPreferences.getBoolean(application.getString(R.string.running_key), true))
-    val walking = MutableLiveData(sharedPreferences.getBoolean(application.getString(R.string.walking_key), true))
+    val isInVehicleSelected = MutableLiveData(
+        sharedPreferences.getBoolean(
+            application.getString(R.string.in_vehicle_key),
+            true
+        )
+    )
+    val isOnBicycleSelected = MutableLiveData(
+        sharedPreferences.getBoolean(
+            application.getString(R.string.on_bicycle_key),
+            true
+        )
+    )
+    val isRunningSelected = MutableLiveData(
+        sharedPreferences.getBoolean(
+            application.getString(R.string.running_key),
+            true
+        )
+    )
+    val isWalkingSelected = MutableLiveData(
+        sharedPreferences.getBoolean(
+            application.getString(R.string.walking_key),
+            true
+        )
+    )
 
     val selectedActivityCount = MediatorLiveData<Int>()
 
-    val usesActivityRecognition = MutableLiveData(sharedPreferences.getBoolean(application.getString(R.string.activity_recognition_key), true))
+    val usesActivityRecognition = MutableLiveData(
+        sharedPreferences.getBoolean(
+            application.getString(R.string.activity_recognition_key),
+            true
+        )
+    )
+
 
     init {
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        val liveDataList = listOf(inVehicle, onBicycle, running, walking)
+        val liveDataList =
+            listOf(isInVehicleSelected, isOnBicycleSelected, isRunningSelected, isWalkingSelected)
         val observer = Observer<Boolean> {
             selectedActivityCount.value = liveDataList.filter { it.value!! }.size
         }
@@ -39,24 +72,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application), S
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         if (key == getApplication<Application>().getString(R.string.speed_threshold_key)) {
-            speedThreshold.value = sharedPreferences.getInt(getApplication<Application>().getString(R.string.speed_threshold_key), 8)
+            speedThreshold.value = sharedPreferences.getInt(
+                getApplication<Application>().getString(R.string.speed_threshold_key),
+                8
+            )
         }
 
         if (key == getApplication<Application>().getString(R.string.activity_recognition_key)) {
-            usesActivityRecognition.value = sharedPreferences.getBoolean(getApplication<Application>().getString(R.string.activity_recognition_key), true)
+            usesActivityRecognition.value = sharedPreferences.getBoolean(
+                getApplication<Application>().getString(R.string.activity_recognition_key),
+                true
+            )
         }
 
         if (key == getApplication<Application>().getString(R.string.in_vehicle_key)) {
-            inVehicle.value = sharedPreferences.getBoolean(getApplication<Application>().getString(R.string.in_vehicle_key), true)
+            isInVehicleSelected.value = sharedPreferences.getBoolean(
+                getApplication<Application>().getString(R.string.in_vehicle_key),
+                true
+            )
         }
         if (key == getApplication<Application>().getString(R.string.on_bicycle_key)) {
-            onBicycle.value = sharedPreferences.getBoolean(getApplication<Application>().getString(R.string.on_bicycle_key), true)
+            isOnBicycleSelected.value = sharedPreferences.getBoolean(
+                getApplication<Application>().getString(R.string.on_bicycle_key),
+                true
+            )
         }
         if (key == getApplication<Application>().getString(R.string.running_key)) {
-            running.value = sharedPreferences.getBoolean(getApplication<Application>().getString(R.string.running_key), true)
+            isRunningSelected.value = sharedPreferences.getBoolean(
+                getApplication<Application>().getString(R.string.running_key),
+                true
+            )
         }
         if (key == getApplication<Application>().getString(R.string.walking_key)) {
-            walking.value = sharedPreferences.getBoolean(getApplication<Application>().getString(R.string.walking_key), true)
+            isWalkingSelected.value = sharedPreferences.getBoolean(
+                getApplication<Application>().getString(R.string.walking_key),
+                true
+            )
         }
     }
 }

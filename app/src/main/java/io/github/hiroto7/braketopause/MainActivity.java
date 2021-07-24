@@ -150,21 +150,21 @@ public class MainActivity extends AppCompatActivity {
 
         model.getSpeedThreshold().observe(this, speedThreshold -> binding.textSpeedThreshold.setText(getString(R.string.n_kph, speedThreshold)));
 
-        model.getInVehicle().observe(this, flag -> {
-            binding.imageInVehicle.setVisibility(flag ? View.VISIBLE : View.GONE);
-            binding.textInVehicle.setVisibility(flag ? View.VISIBLE : View.GONE);
+        model.isInVehicleSelected().observe(this, inVehicleSelected -> {
+            binding.imageInVehicle.setVisibility(inVehicleSelected ? View.VISIBLE : View.GONE);
+            binding.textInVehicle.setVisibility(inVehicleSelected ? View.VISIBLE : View.GONE);
         });
-        model.getOnBicycle().observe(this, flag -> {
-            binding.imageOnBicycle.setVisibility(flag ? View.VISIBLE : View.GONE);
-            binding.textOnBicycle.setVisibility(flag ? View.VISIBLE : View.GONE);
+        model.isOnBicycleSelected().observe(this, onBicycleSelected -> {
+            binding.imageOnBicycle.setVisibility(onBicycleSelected ? View.VISIBLE : View.GONE);
+            binding.textOnBicycle.setVisibility(onBicycleSelected ? View.VISIBLE : View.GONE);
         });
-        model.getRunning().observe(this, flag -> {
-            binding.imageRunning.setVisibility(flag ? View.VISIBLE : View.GONE);
-            binding.textRunning.setVisibility(flag ? View.VISIBLE : View.GONE);
+        model.isRunningSelected().observe(this, runningSelected -> {
+            binding.imageRunning.setVisibility(runningSelected ? View.VISIBLE : View.GONE);
+            binding.textRunning.setVisibility(runningSelected ? View.VISIBLE : View.GONE);
         });
-        model.getWalking().observe(this, flag -> {
-            binding.imageWalking.setVisibility(flag ? View.VISIBLE : View.GONE);
-            binding.textWalking.setVisibility(flag ? View.VISIBLE : View.GONE);
+        model.isWalkingSelected().observe(this, walkingSelected -> {
+            binding.imageWalking.setVisibility(walkingSelected ? View.VISIBLE : View.GONE);
+            binding.textWalking.setVisibility(walkingSelected ? View.VISIBLE : View.GONE);
         });
 
         model.getSelectedActivityCount().observe(this, count -> {
