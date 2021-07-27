@@ -22,6 +22,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -150,31 +151,28 @@ public class MainActivity extends AppCompatActivity {
 
         model.getSpeedThreshold().observe(this, speedThreshold -> binding.textSpeedThreshold.setText(getString(R.string.n_kph, speedThreshold)));
 
-        model.isInVehicleSelected().observe(this, inVehicleSelected -> {
-            binding.imageInVehicle.setVisibility(inVehicleSelected ? View.VISIBLE : View.GONE);
-            binding.textInVehicle.setVisibility(inVehicleSelected ? View.VISIBLE : View.GONE);
-        });
-        model.isOnBicycleSelected().observe(this, onBicycleSelected -> {
-            binding.imageOnBicycle.setVisibility(onBicycleSelected ? View.VISIBLE : View.GONE);
-            binding.textOnBicycle.setVisibility(onBicycleSelected ? View.VISIBLE : View.GONE);
-        });
-        model.isRunningSelected().observe(this, runningSelected -> {
-            binding.imageRunning.setVisibility(runningSelected ? View.VISIBLE : View.GONE);
-            binding.textRunning.setVisibility(runningSelected ? View.VISIBLE : View.GONE);
-        });
-        model.isWalkingSelected().observe(this, walkingSelected -> {
-            binding.imageWalking.setVisibility(walkingSelected ? View.VISIBLE : View.GONE);
-            binding.textWalking.setVisibility(walkingSelected ? View.VISIBLE : View.GONE);
-        });
+        model.getSelectedActivities().observe(this, selectedActivities -> {
+            binding.textSelectedActivityCount.setText(getString(R.string.n_types_selected, selectedActivities.size()));
 
-        model.getSelectedActivityCount().observe(this, count -> {
-            binding.textSelectedActivityCount.setText(getString(R.string.n_types_selected, count));
-            if (count > 1) {
-                binding.viewMultiSelectedActivities.setVisibility(View.VISIBLE);
-                binding.viewSingleSelectedActivity.setVisibility(View.GONE);
-            } else {
+            binding.imageInVehicle.setVisibility(selectedActivities.contains(DetectedActivity.IN_VEHICLE) ? View.VISIBLE : View.GONE);
+            binding.imageOnBicycle.setVisibility(selectedActivities.contains(DetectedActivity.ON_BICYCLE) ? View.VISIBLE : View.GONE);
+            binding.imageRunning.setVisibility(selectedActivities.contains(DetectedActivity.RUNNING) ? View.VISIBLE : View.GONE);
+            binding.imageWalking.setVisibility(selectedActivities.contains(DetectedActivity.WALKING) ? View.VISIBLE : View.GONE);
+
+            if (selectedActivities.size() == 1) {
                 binding.viewMultiSelectedActivities.setVisibility(View.GONE);
-                binding.viewSingleSelectedActivity.setVisibility(View.VISIBLE);
+
+                binding.textInVehicle.setVisibility(selectedActivities.contains(DetectedActivity.IN_VEHICLE) ? View.VISIBLE : View.GONE);
+                binding.textOnBicycle.setVisibility(selectedActivities.contains(DetectedActivity.ON_BICYCLE) ? View.VISIBLE : View.GONE);
+                binding.textRunning.setVisibility(selectedActivities.contains(DetectedActivity.RUNNING) ? View.VISIBLE : View.GONE);
+                binding.textWalking.setVisibility(selectedActivities.contains(DetectedActivity.WALKING) ? View.VISIBLE : View.GONE);
+            } else {
+                binding.viewMultiSelectedActivities.setVisibility(View.VISIBLE);
+
+                binding.textInVehicle.setVisibility(View.GONE);
+                binding.textOnBicycle.setVisibility(View.GONE);
+                binding.textRunning.setVisibility(View.GONE);
+                binding.textWalking.setVisibility(View.GONE);
             }
         });
 
