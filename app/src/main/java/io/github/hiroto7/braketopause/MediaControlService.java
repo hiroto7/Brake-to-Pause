@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
@@ -278,6 +279,8 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, MEDIA_CONTROL_CHANNEL_ID)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(mainPendingIntent)
+                .setColorized(true)
+                .setColor(Color.GRAY)
                 .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.exit_playback_control), stopPendingIntent);
 
         controllingPlaybackNotification = notificationBuilder
