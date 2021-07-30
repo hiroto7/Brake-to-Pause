@@ -267,8 +267,8 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         activityRecognitionClient = ActivityRecognition.getClient(this);
 
-        Intent intent = new Intent(ACTION_TRANSITION);
-        transitionPendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent transitionIntent = new Intent(ACTION_TRANSITION);
+        transitionPendingIntent = PendingIntent.getBroadcast(this, 0, transitionIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Intent mainIntent = new Intent(this, MainActivity.class);
         mainPendingIntent = PendingIntent.getActivity(this, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
