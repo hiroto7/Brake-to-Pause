@@ -194,7 +194,7 @@ public class MediaControlService extends Service implements AudioManager.OnAudio
 
         LocationRequest locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(1500);
+                .setInterval(1000);
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
