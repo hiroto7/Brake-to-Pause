@@ -215,11 +215,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         activities = Arrays.asList(
-                new Activity(R.string.in_vehicle_key, R.string.in_vehicle_title, binding.imageInVehicle),
-                new Activity(R.string.on_bicycle_key, R.string.on_bicycle_title, binding.imageOnBicycle),
-                new Activity(R.string.running_key, R.string.running_title, binding.imageRunning),
-                new Activity(R.string.walking_key, R.string.walking_title, binding.imageWalking));
-
+                new Activity(R.string.in_vehicle_key, R.string.in_vehicle_title),
+                new Activity(R.string.on_bicycle_key, R.string.on_bicycle_title),
+                new Activity(R.string.running_key, R.string.running_title),
+                new Activity(R.string.walking_key, R.string.walking_title));
     }
 
     private void onStopButtonClicked(View v) {
@@ -254,12 +253,10 @@ public class MainActivity extends AppCompatActivity {
     private class Activity {
         final public String key;
         final public String title;
-        final public ImageView imageView;
 
-        Activity(int keyResId, int titleResId, ImageView imageView) {
+        Activity(int keyResId, int titleResId) {
             this.key = getString(keyResId);
             this.title = getString(titleResId);
-            this.imageView = imageView;
         }
     }
 }
