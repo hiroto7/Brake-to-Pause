@@ -118,11 +118,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
+        binding.setLifecycleOwner(this);
+
         View view = binding.getRoot();
         setContentView(view);
 
         MainViewModel model = new ViewModelProvider(this).get(MainViewModel.class);
+        binding.setViewModel(model);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         intent = new Intent(getApplication(), MediaControlService.class);
@@ -147,44 +151,6 @@ public class MainActivity extends AppCompatActivity {
                             .apply())
                     .setNegativeButton(android.R.string.cancel, null)
                     .show();
-        });
-
-        model.getSpeedThreshold().observe(this, speedThreshold -> binding.textSpeedThreshold.setText(getString(R.string.n_kph, speedThreshold)));
-
-        model.getSelectedActivities().observe(this, selectedActivities -> {
-            binding.textSelectedActivityCount.setText(getString(R.string.n_types_selected, selectedActivities.size()));
-
-            binding.imageInVehicle.setVisibility(selectedActivities.contains(DetectedActivity.IN_VEHICLE) ? View.VISIBLE : View.GONE);
-            binding.imageOnBicycle.setVisibility(selectedActivities.contains(DetectedActivity.ON_BICYCLE) ? View.VISIBLE : View.GONE);
-            binding.imageRunning.setVisibility(selectedActivities.contains(DetectedActivity.RUNNING) ? View.VISIBLE : View.GONE);
-            binding.imageWalking.setVisibility(selectedActivities.contains(DetectedActivity.WALKING) ? View.VISIBLE : View.GONE);
-
-            if (selectedActivities.size() == 1) {
-                binding.viewMultiSelectedActivities.setVisibility(View.GONE);
-
-                binding.textInVehicle.setVisibility(selectedActivities.contains(DetectedActivity.IN_VEHICLE) ? View.VISIBLE : View.GONE);
-                binding.textOnBicycle.setVisibility(selectedActivities.contains(DetectedActivity.ON_BICYCLE) ? View.VISIBLE : View.GONE);
-                binding.textRunning.setVisibility(selectedActivities.contains(DetectedActivity.RUNNING) ? View.VISIBLE : View.GONE);
-                binding.textWalking.setVisibility(selectedActivities.contains(DetectedActivity.WALKING) ? View.VISIBLE : View.GONE);
-            } else {
-                binding.viewMultiSelectedActivities.setVisibility(View.VISIBLE);
-
-                binding.textInVehicle.setVisibility(View.GONE);
-                binding.textOnBicycle.setVisibility(View.GONE);
-                binding.textRunning.setVisibility(View.GONE);
-                binding.textWalking.setVisibility(View.GONE);
-            }
-        });
-
-        model.getUsesActivityRecognition().observe(this, usesActivityRecognition -> {
-            binding.switchActivityRecognition.setChecked(usesActivityRecognition);
-            if (usesActivityRecognition) {
-                binding.layout.setVisibility(View.VISIBLE);
-                binding.divider.setVisibility(View.VISIBLE);
-            } else {
-                binding.layout.setVisibility(View.GONE);
-                binding.divider.setVisibility(View.GONE);
-            }
         });
 
         binding.switchActivityRecognition.setOnCheckedChangeListener((buttonView, isChecked) -> sharedPreferences
