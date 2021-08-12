@@ -19,13 +19,36 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-        <ScrollView
+        <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:animateLayoutChanges="true">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                style="@style/Widget.MaterialComponents.Toolbar.Surface"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:visibility="@{viewModel.isControllingPlaybackState ? View.GONE : View.VISIBLE}"
+                app:title="@string/app_name" />
+
+            <com.google.android.material.appbar.MaterialToolbar
+                style="@style/Widget.MaterialComponents.Toolbar.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:visibility="@{viewModel.isControllingPlaybackState ? View.VISIBLE : View.GONE}"
+                app:title="@string/controlling_playback_state" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
                 android:orientation="vertical"
                 android:paddingHorizontal="32dp"
                 android:paddingTop="32dp"
@@ -35,34 +58,41 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/speed_threshold_title"
-                    android:textAppearance="?attr/textAppearanceHeadline5" />
+                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    android:visibility="@{viewModel.isControllingPlaybackState ? View.GONE : View.VISIBLE}" />
 
                 <TextView
-                    android:id="@+id/textView5"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginVertical="16dp"
                     android:text="@string/speed_summary"
-                    android:textAppearance="?attr/textAppearanceBody2"
-                    android:textColor="?android:attr/textColorSecondary" />
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:visibility="@{viewModel.isControllingPlaybackState ? View.GONE : View.VISIBLE}" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notice"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    android:textColor="?attr/colorPrimaryVariant" />
 
                 <TextView
                     android:id="@+id/text_speed_threshold"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:clickable="true"
-                    android:focusable="true"
+                    android:layout_marginVertical="16dp"
+                    android:clickable="@{!viewModel.isControllingPlaybackState}"
+                    android:focusable="@{!viewModel.isControllingPlaybackState}"
                     android:foreground="?android:attr/selectableItemBackground"
                     android:text="@{@string/n_kph(viewModel.speedThreshold)}"
                     android:textAlignment="center"
                     android:textAppearance="?attr/textAppearanceHeadline3"
-                    android:textColor="?attr/colorAccent" />
+                    android:textColor="?android:attr/textColorLink" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
                     android:drawablePadding="16dp"
                     android:text="@string/pause_at_low_speed"
                     android:textAppearance="?attr/textAppearanceBody2"
@@ -87,7 +117,7 @@
                     android:text="@string/location_permission_required"
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textColor="?android:attr/textColorSecondary"
-                    android:visibility="gone"
+                    android:visibility="@{viewModel.isControllingPlaybackState ? View.GONE : View.VISIBLE}"
                     app:drawableStartCompat="@drawable/ic_baseline_location_on_24" />
 
                 <com.google.android.material.card.MaterialCardView
@@ -109,7 +139,8 @@
                             android:id="@+id/switch_activity_recognition"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:checked="@{viewModel.usesActivityRecognition}"
+                            android:checked="@{viewModel.isMainActivitySpecified}"
+                            android:enabled="@{!viewModel.isControllingPlaybackState}"
                             android:includeFontPadding="false"
                             android:padding="16dp"
                             android:text="@string/activity_recognition_header"
@@ -118,7 +149,7 @@
                         <com.google.android.material.divider.MaterialDivider
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:visibility="@{viewModel.usesActivityRecognition ? View.VISIBLE : View.GONE}"
+                            android:visibility="@{viewModel.isMainActivitySpecified ? View.VISIBLE : View.GONE}"
                             app:dividerInsetEnd="16dp"
                             app:dividerInsetStart="16dp" />
 
@@ -126,15 +157,14 @@
                             android:id="@+id/layout"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:clickable="true"
-                            android:focusable="true"
+                            android:animateLayoutChanges="true"
+                            android:clickable="@{!viewModel.isControllingPlaybackState}"
+                            android:focusable="@{!viewModel.isControllingPlaybackState}"
                             android:foreground="?android:attr/selectableItemBackground"
                             android:gravity="center_vertical"
                             android:orientation="horizontal"
-                            android:animateLayoutChanges="true"
                             android:padding="16dp"
-                            android:visibility="@{viewModel.usesActivityRecognition ? View.VISIBLE : View.GONE}">
-                            　
+                            android:visibility="@{viewModel.isMainActivitySpecified ? View.VISIBLE : View.GONE}">
 
                             <LinearLayout
                                 android:id="@+id/view_multi_selected_activities"
@@ -258,7 +288,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/change_button_text"
                                 android:textAppearance="?attr/textAppearanceListItemSecondary"
-                                android:textColor="?android:attr/textColorLink" />
+                                android:textColor="?android:attr/textColorLink"
+                                android:visibility="@{viewModel.isControllingPlaybackState ? View.INVISIBLE : View.VISIBLE}" />
 
                         </LinearLayout>
 
@@ -288,14 +319,13 @@
                                 android:textColor="?android:attr/textColorSecondary" />
 
                             <TextView
-                                android:id="@+id/textView"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
                                 android:text="@string/activity_recognition_permission_required"
                                 android:textAppearance="?attr/textAppearanceListItemSecondary"
                                 android:textColor="?android:attr/textColorSecondary"
-                                android:visibility="gone" />
+                                android:visibility="@{viewModel.isControllingPlaybackState ? View.GONE : View.VISIBLE}" />
 
                         </LinearLayout>
 
@@ -304,7 +334,7 @@
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
-        </ScrollView>
+        </androidx.core.widget.NestedScrollView>
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/button_start"
@@ -312,16 +342,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
             android:layout_margin="16dp"
-            android:backgroundTint="@color/mtrl_fab_bg_color_selector_primary"
             android:clickable="true"
-            android:enabled="false"
+            android:enabled="@{!viewModel.isControllingPlaybackState}"
             android:text="@string/start_playback_control"
-            android:textColor="@color/mtrl_fab_icon_text_color_selector_primary"
-            android:visibility="gone"
             app:icon="@drawable/ic_baseline_play_arrow_24"
-            app:iconTint="@color/mtrl_fab_icon_text_color_selector_primary"
-            app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
-            app:rippleColor="@color/mtrl_fab_ripple_color_primary" />
+            app:shown="@{!viewModel.isControllingPlaybackState}" />
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/button_stop"
@@ -329,12 +354,15 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
             android:layout_margin="16dp"
+            android:backgroundTint="@color/mtrl_fab_bg_color_selector_primary"
             android:clickable="true"
-            android:enabled="false"
+            android:enabled="@{viewModel.isControllingPlaybackState}"
             android:text="@string/exit_playback_control"
-            android:visibility="gone"
+            android:textColor="@color/mtrl_fab_icon_text_color_selector_primary"
             app:icon="@drawable/ic_baseline_stop_24"
-            app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />
+            app:iconTint="@color/mtrl_fab_icon_text_color_selector_primary"
+            app:rippleColor="@color/mtrl_fab_ripple_color_primary"
+            app:shown="@{viewModel.isControllingPlaybackState}" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

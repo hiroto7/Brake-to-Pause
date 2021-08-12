@@ -11,7 +11,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.NumberPicker;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -22,7 +21,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 
-import com.google.android.gms.location.DetectedActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -33,25 +31,26 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import io.github.hiroto7.braketopause.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-
-    private boolean enabled;
-    private boolean starting;
+    private static final int MIN_SPEED = 1;
+    private static final int MAX_SPEED = 30;
 
     private ActivityMainBinding binding;
+    private MainViewModel model;
     private Intent intent;
     private SharedPreferences sharedPreferences;
     private MediaControlService mediaControlService;
-    private List<Activity> activities;
     private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-                setStarting(false);
-
+                if (result.isEmpty()) {
+                    return;
+                }
                 if (result.containsValue(false)) {
                     Snackbar.make(binding.buttonStart, getString(R.string.permission_denied), Snackbar.LENGTH_SHORT).setAnchorView(binding.buttonStart).show();
                     return;
@@ -65,10 +64,10 @@ public class MainActivity extends AppCompatActivity {
             MediaControlService.MediaControlBinder binder = (MediaControlService.MediaControlBinder) service;
             mediaControlService = binder.getService();
 
-            mediaControlService.setOnMediaControlStartedListener(() -> setEnabled(true));
-            mediaControlService.setOnMediaControlStoppedListener(() -> setEnabled(false));
+            mediaControlService.setOnMediaControlStartedListener(() -> model.isControllingPlaybackState().setValue(true));
+            mediaControlService.setOnMediaControlStoppedListener(() -> model.isControllingPlaybackState().setValue(false));
 
-            setEnabled(mediaControlService.isEnabled());
+            model.isControllingPlaybackState().setValue(mediaControlService.isEnabled());
         }
 
         @Override
@@ -78,24 +77,6 @@ public class MainActivity extends AppCompatActivity {
             mediaControlService = null;
         }
     };
-
-    private void setStarting(boolean starting) {
-        this.starting = starting;
-        maybeEnableStartButton();
-    }
-
-    private void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        if (enabled) {
-            binding.buttonStart.hide();
-            binding.buttonStop.setEnabled(true);
-            binding.buttonStop.show();
-        } else {
-            binding.buttonStart.show();
-            binding.buttonStop.hide();
-        }
-        maybeEnableStartButton();
-    }
 
     @Override
     protected void onPause() {
@@ -111,10 +92,6 @@ public class MainActivity extends AppCompatActivity {
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
-    private void maybeEnableStartButton() {
-        binding.buttonStart.setEnabled(!enabled && !starting);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         View view = binding.getRoot();
         setContentView(view);
 
-        MainViewModel model = new ViewModelProvider(this).get(MainViewModel.class);
+        model = new ViewModelProvider(this).get(MainViewModel.class);
         binding.setViewModel(model);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -136,14 +113,15 @@ public class MainActivity extends AppCompatActivity {
 
         binding.textSpeedThreshold.setOnClickListener(v -> {
             NumberPicker numberPicker = new NumberPicker(this);
-            numberPicker.setMinValue(1);
-            numberPicker.setMaxValue(30);
+            numberPicker.setMinValue(MIN_SPEED);
+            numberPicker.setMaxValue(MAX_SPEED);
             numberPicker.setWrapSelectorWheel(false);
             numberPicker.setValue(model.getSpeedThreshold().getValue());
+            numberPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+            numberPicker.setDisplayedValues(IntStream.rangeClosed(MIN_SPEED, MAX_SPEED).mapToObj(speed -> getString(R.string.n_kph, speed)).toArray(String[]::new));
 
             new AlertDialog.Builder(this)
                     .setTitle(R.string.speed_threshold_title)
-                    .setMessage(R.string.kph)
                     .setView(numberPicker)
                     .setPositiveButton(android.R.string.ok, (dialog, which) -> sharedPreferences
                             .edit()
@@ -157,6 +135,12 @@ public class MainActivity extends AppCompatActivity {
                 .edit()
                 .putBoolean(getString(R.string.activity_recognition_key), isChecked)
                 .apply());
+
+        List<Activity> activities = Arrays.asList(
+                new Activity(R.string.in_vehicle_key, R.string.in_vehicle_title),
+                new Activity(R.string.on_bicycle_key, R.string.on_bicycle_title),
+                new Activity(R.string.running_key, R.string.running_title),
+                new Activity(R.string.walking_key, R.string.walking_title));
 
         binding.layout.setOnClickListener(v -> {
             Map<Activity, Boolean> map = new HashMap<>();
@@ -179,16 +163,9 @@ public class MainActivity extends AppCompatActivity {
                             })
                     .show();
         });
-
-        activities = Arrays.asList(
-                new Activity(R.string.in_vehicle_key, R.string.in_vehicle_title),
-                new Activity(R.string.on_bicycle_key, R.string.on_bicycle_title),
-                new Activity(R.string.running_key, R.string.running_title),
-                new Activity(R.string.walking_key, R.string.walking_title));
     }
 
     private void onStopButtonClicked(View v) {
-        binding.buttonStop.setEnabled(false);
         mediaControlService.stopMediaControl();
         stopService(intent);
     }
@@ -208,7 +185,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!requestedPermissions.isEmpty()) {
-            setStarting(true);
             requestPermissionsLauncher.launch(requestedPermissions.toArray(new String[0]));
             return;
         }
