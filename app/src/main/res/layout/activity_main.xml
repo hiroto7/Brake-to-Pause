@@ -87,8 +87,9 @@
                     android:foreground="?android:attr/selectableItemBackground"
                     android:text="@{@string/n_kph(viewModel.speedThreshold)}"
                     android:textAlignment="center"
-                    android:textAppearance="?attr/textAppearanceHeadline3"
+                    android:textAppearance="?attr/textAppearanceHeadline2"
                     android:textColor="?android:attr/textColorLink"
+                    android:textStyle="bold"
                     tools:text="@string/n_kph" />
 
                 <TextView
