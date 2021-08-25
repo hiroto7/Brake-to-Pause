@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private MainViewModel model;
     private Intent intent;
     private SharedPreferences sharedPreferences;
-    private MediaControlService mediaControlService;
+    private final Runnable onMediaControlStartedListener = () -> model.isControllingPlaybackState().setValue(true);
     private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                 if (result.isEmpty()) {
@@ -58,23 +58,25 @@ public class MainActivity extends AppCompatActivity {
 
                 startForegroundService(intent);
             });
+    private final Runnable onMediaControlStoppedListener = () -> model.isControllingPlaybackState().setValue(false);
+    private PlaybackControlService playbackControlService;
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            MediaControlService.MediaControlBinder binder = (MediaControlService.MediaControlBinder) service;
-            mediaControlService = binder.getService();
+            PlaybackControlService.MediaControlBinder binder = (PlaybackControlService.MediaControlBinder) service;
+            playbackControlService = binder.getService();
 
-            mediaControlService.setOnMediaControlStartedListener(() -> model.isControllingPlaybackState().setValue(true));
-            mediaControlService.setOnMediaControlStoppedListener(() -> model.isControllingPlaybackState().setValue(false));
+            playbackControlService.addOnMediaControlStartedListener(onMediaControlStartedListener);
+            playbackControlService.addOnMediaControlStoppedListener(onMediaControlStoppedListener);
 
-            model.isControllingPlaybackState().setValue(mediaControlService.isEnabled());
+            model.isControllingPlaybackState().setValue(playbackControlService.isEnabled());
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mediaControlService.setOnMediaControlStartedListener(null);
-            mediaControlService.setOnMediaControlStoppedListener(null);
-            mediaControlService = null;
+            playbackControlService.removeOnMediaControlStartedListener(onMediaControlStartedListener);
+            playbackControlService.removeOnMediaControlStoppedListener(onMediaControlStoppedListener);
+            playbackControlService = null;
         }
     };
 
@@ -106,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         binding.setViewModel(model);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        intent = new Intent(getApplication(), MediaControlService.class);
+        intent = new Intent(getApplication(), PlaybackControlService.class);
 
         binding.buttonStart.setOnClickListener(this::onStartButtonClicked);
         binding.buttonStop.setOnClickListener(this::onStopButtonClicked);
@@ -166,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onStopButtonClicked(View v) {
-        mediaControlService.stopMediaControl();
+        playbackControlService.stopMediaControl();
         stopService(intent);
     }
 
