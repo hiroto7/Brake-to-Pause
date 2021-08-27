@@ -22,7 +22,6 @@ import android.os.IBinder;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.preference.PreferenceManager;
 
@@ -135,7 +134,7 @@ public class PlaybackControlService extends Service implements AudioManager.OnAu
     private final Runnable stopMediaControlWithNotificationCallback = () -> {
         stopMediaControl();
 
-        Notification notification = new NotificationCompat.Builder(this, AUTOMATIC_STOP_CHANNEL_ID)
+        final Notification notification = new NotificationCompat.Builder(this, AUTOMATIC_STOP_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_stop_24)
                 .setContentTitle(getString(R.string.playback_control_automatically_ended))
                 .setContentText(getString(R.string.time_has_passed_with_media_paused))
@@ -186,7 +185,8 @@ public class PlaybackControlService extends Service implements AudioManager.OnAu
     }
 
     private void requestLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
 
@@ -205,21 +205,21 @@ public class PlaybackControlService extends Service implements AudioManager.OnAu
     private void requestActivityTransitionUpdates() {
         registerReceiver(transitionsReceiver, new IntentFilter(ACTION_TRANSITION));
 
-        List<Integer> activityTypes = Arrays.asList(
+        final List<Integer> activityTypes = Arrays.asList(
                 DetectedActivity.STILL,
                 DetectedActivity.IN_VEHICLE,
                 DetectedActivity.ON_BICYCLE,
                 DetectedActivity.RUNNING,
                 DetectedActivity.WALKING);
-        List<ActivityTransition> transitions = activityTypes.stream()
+        final List<ActivityTransition> transitions = activityTypes.stream()
                 .map(activityType -> new ActivityTransition.Builder()
                         .setActivityType(activityType)
                         .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
                         .build())
                 .collect(Collectors.toList());
 
-        ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
-        Task<Void> task = activityRecognitionClient.requestActivityTransitionUpdates(request, transitionPendingIntent);
+        final ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
+        final Task<Void> task = activityRecognitionClient.requestActivityTransitionUpdates(request, transitionPendingIntent);
     }
 
     private void removeActivityTransitionUpdates() {
@@ -230,7 +230,7 @@ public class PlaybackControlService extends Service implements AudioManager.OnAu
     private final Set<Runnable> onMediaControlStoppedListeners = new HashSet<>();
 
     private void createNotificationChannel() {
-        List<NotificationChannel> channels = Arrays.asList(
+        final List<NotificationChannel> channels = Arrays.asList(
                 new NotificationChannel(PLAYBACK_CONTROL_CHANNEL_ID, getString(R.string.playback_control), NotificationManager.IMPORTANCE_LOW),
                 new NotificationChannel(AUTOMATIC_STOP_CHANNEL_ID, getString(R.string.automatic_exit), NotificationManager.IMPORTANCE_DEFAULT));
         notificationManager.createNotificationChannels(channels);
@@ -261,7 +261,7 @@ public class PlaybackControlService extends Service implements AudioManager.OnAu
         super.onDestroy();
 
         if (hasAudioFocus) {
-            AudioFocusRequest lastingFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).build();
+            final AudioFocusRequest lastingFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).build();
             audioManager.requestAudioFocus(lastingFocusRequest);
         }
 
@@ -300,16 +300,19 @@ public class PlaybackControlService extends Service implements AudioManager.OnAu
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         activityRecognitionClient = ActivityRecognition.getClient(this);
 
-        Intent transitionIntent = new Intent(ACTION_TRANSITION);
-        transitionPendingIntent = PendingIntent.getBroadcast(this, 0, transitionIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        final Intent transitionIntent = new Intent(ACTION_TRANSITION);
+        transitionPendingIntent = PendingIntent.getBroadcast(this, 0, transitionIntent,
+                android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S ?
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE :
+                        PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Intent mainIntent = new Intent(this, MainActivity.class);
-        mainPendingIntent = PendingIntent.getActivity(this, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        final Intent mainIntent = new Intent(this, MainActivity.class);
+        mainPendingIntent = PendingIntent.getActivity(this, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        Intent stopIntent = new Intent(ACTION_STOP_MEDIA_CONTROL);
-        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        final Intent stopIntent = new Intent(ACTION_STOP_MEDIA_CONTROL);
+        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, PLAYBACK_CONTROL_CHANNEL_ID)
+        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, PLAYBACK_CONTROL_CHANNEL_ID)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(mainPendingIntent)
                 .setColorized(true)

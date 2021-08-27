@@ -17,7 +17,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 
@@ -175,13 +174,13 @@ public class MainActivity extends AppCompatActivity {
     private void onStartButtonClicked(View v) {
         List<String> requestedPermissions = new ArrayList<>();
         if (sharedPreferences.getBoolean(getString(R.string.location_key), true) &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestedPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
             requestedPermissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         }
         if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true) &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED &&
+                checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED &&
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             requestedPermissions.add(Manifest.permission.ACTIVITY_RECOGNITION);
         }
