@@ -317,7 +317,7 @@ public class PlaybackControlService extends Service implements AudioManager.OnAu
                 .setContentIntent(mainPendingIntent)
                 .setColorized(true)
                 .setColor(Color.GRAY)
-                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.exit_playback_control), stopPendingIntent);
+                .addAction(R.drawable.ic_baseline_stop_24, getString(R.string.finish_playback_control), stopPendingIntent);
 
         controllingPlaybackNotification = notificationBuilder
                 .setContentTitle(getString(R.string.controlling_playback_state))

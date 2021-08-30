@@ -2,7 +2,7 @@
     <string name="permission_denied">アクセスが拒否されました</string>
 
     <string name="start_playback_control">再生状態の制御を開始</string>
-    <string name="exit_playback_control">再生状態の制御を終了</string>
+    <string name="finish_playback_control">再生状態の制御を終了</string>
 
     <string name="playback_control">再生状態の制御</string>
     <string name="controlling_playback_state">再生状態を制御中</string>
@@ -21,10 +21,12 @@
     <string name="change_button_text">変更</string>
     <string name="n_types_selected">%d 種類を選択中 :</string>
 
-    <string name="speed_threshold_title">指定した速度で再生状態を切り替え</string>
+    <string name="speed_threshold_title">指定した移動速度で再生と一時停止を切り替え</string>
     <string name="kph">km/h</string>
     <string name="n_kph">%d km/h</string>
     <string name="pause_at_low_speed">移動速度が指定した速度よりも遅くなると、再生を一時停止します。</string>
     <string name="play_at_high_speed">移動速度が指定した速度以上に回復すると、再生を再開します。</string>
     <string name="speed_summary">減速したときや立ち止まったときにだけ、音楽などの再生を自動的に一時停止できます。</string>
+    <string name="notice">あらかじめ手動で、音楽などを再生中の状態にしておいてください。終了まで手動で一時停止しないでください。</string>
+    <string name="location_permission_required">移動速度の取得のため、位置情報へのアクセス権限が必要です。</string>
 </resources>

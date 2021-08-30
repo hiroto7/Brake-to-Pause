@@ -4,13 +4,13 @@
     <string name="permission_denied">Permission denied</string>
 
     <string name="start_playback_control">Start playback control</string>
-    <string name="exit_playback_control">Exit playback control</string>
+    <string name="finish_playback_control">Finish playback control</string>
 
     <string name="playback_control">Playback control</string>
     <string name="controlling_playback_state">Controlling the playback state</string>
     <string name="paused_media">Playback is paused</string>
 
-    <string name="automatic_exit">Automatic exit of media control</string>
+    <string name="automatic_exit">Automatic exit of playback control</string>
     <string name="playback_control_automatically_ended">Playback control has ended automatically</string>
     <string name="time_has_passed_with_media_paused">30 minutes have passed since playback was paused</string>
 
@@ -36,12 +36,12 @@
     <string name="location_key" translatable="false">location</string>
 
     <string name="speed_threshold_key" translatable="false">speed_threshold</string>
-    <string name="speed_threshold_title">Switch between play and pause at the specified speed</string>
+    <string name="speed_threshold_title">Toggle between play and pause at the movement speed you specify</string>
     <string name="kph">km/h</string>
     <string name="n_kph">%d km/h</string>
-    <string name="location_permission_required">移動速度の取得のため、位置情報へのアクセス権限が必要です。</string>
     <string name="pause_at_low_speed">Playback is paused when moving slower than the specified speed.</string>
     <string name="play_at_high_speed">Playback is resumed when moving faster than the specified speed.</string>
     <string name="speed_summary">Automatically pause playback of media such as music only when you slow down or are stopping.</string>
-    <string name="notice">あらかじめ手動で、音楽などを再生中の状態にしておいてください。終了まで手動で一時停止しないでください。</string>
+    <string name="notice">Make sure that you are manually playing the media beforehand. Do not manually pause it until you finish playback control.</string>
+    <string name="location_permission_required">Location permission is required to get the device\'s movement speed.</string>
 </resources>

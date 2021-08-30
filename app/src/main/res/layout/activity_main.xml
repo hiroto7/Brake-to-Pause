@@ -366,7 +366,7 @@
             android:backgroundTint="@color/mtrl_fab_bg_color_selector_primary"
             android:clickable="true"
             android:enabled="@{viewModel.isControllingPlaybackState}"
-            android:text="@string/exit_playback_control"
+            android:text="@string/finish_playback_control"
             android:textColor="@color/mtrl_fab_icon_text_color_selector_primary"
             app:icon="@drawable/ic_baseline_stop_24"
             app:iconTint="@color/mtrl_fab_icon_text_color_selector_primary"
