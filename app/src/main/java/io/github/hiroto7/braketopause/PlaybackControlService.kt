@@ -32,7 +32,6 @@ class PlaybackControlService : Service(), OnAudioFocusChangeListener {
     private var usesActivityRecognition = false
     private var hasAudioFocus = false
     private var timerInProgress = false
-    private var selectedActivities: MutableList<Int>? = null
     private lateinit var mainPendingIntent: PendingIntent
     private lateinit var controllingPlaybackNotification: Notification
     private lateinit var playbackPausedNotification: Notification
@@ -59,9 +58,25 @@ class PlaybackControlService : Service(), OnAudioFocusChangeListener {
             if (!ActivityTransitionResult.hasResult(intent)) {
                 return
             }
+
+            val selectedActivities = LinkedList<Int>().apply {
+                if (sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true)) {
+                    add(DetectedActivity.IN_VEHICLE)
+                }
+                if (sharedPreferences.getBoolean(getString(R.string.on_bicycle_key), true)) {
+                    add(DetectedActivity.ON_BICYCLE)
+                }
+                if (sharedPreferences.getBoolean(getString(R.string.running_key), true)) {
+                    add(DetectedActivity.RUNNING)
+                }
+                if (sharedPreferences.getBoolean(getString(R.string.walking_key), true)) {
+                    add(DetectedActivity.WALKING)
+                }
+            }
+
             val result = ActivityTransitionResult.extractResult(intent)!!
             for (event in result.transitionEvents) {
-                if (selectedActivities!!.contains(event.activityType) && event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
+                if (selectedActivities.contains(event.activityType) && event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
                     if (usesLocation) {
                         requestLocationUpdates()
                     } else {
@@ -296,20 +311,6 @@ class PlaybackControlService : Service(), OnAudioFocusChangeListener {
         usesLocation = sharedPreferences.getBoolean(getString(R.string.location_key), true)
         usesActivityRecognition =
             sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true)
-        selectedActivities = LinkedList<Int>().apply {
-            if (sharedPreferences.getBoolean(getString(R.string.in_vehicle_key), true)) {
-                add(DetectedActivity.IN_VEHICLE)
-            }
-            if (sharedPreferences.getBoolean(getString(R.string.on_bicycle_key), true)) {
-                add(DetectedActivity.ON_BICYCLE)
-            }
-            if (sharedPreferences.getBoolean(getString(R.string.running_key), true)) {
-                add(DetectedActivity.RUNNING)
-            }
-            if (sharedPreferences.getBoolean(getString(R.string.walking_key), true)) {
-                add(DetectedActivity.WALKING)
-            }
-        }
         if (usesLocation) {
             requestLocationUpdates()
         }
