@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.*
 import android.content.*
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioManager.OnAudioFocusChangeListener
@@ -283,7 +282,7 @@ class PlaybackControlService : Service(), OnAudioFocusChangeListener {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(mainPendingIntent)
             .setColorized(true)
-            .setColor(Color.GRAY)
+            .setColor(getColor(R.color.orange_500))
             .addAction(
                 R.drawable.ic_baseline_stop_24,
                 getString(R.string.finish_playback_control),
