@@ -29,4 +29,5 @@
     <string name="speed_summary">減速したときや立ち止まったときにだけ、音楽などの再生を自動的に一時停止できます。</string>
     <string name="notice">あらかじめ手動で、音楽などを再生中の状態にしておいてください。終了まで手動で一時停止しないでください。</string>
     <string name="location_permission_required">移動速度の取得のため、位置情報へのアクセス権限が必要です。</string>
+    <string name="toggle_at_n_kph">%d km/h で切替</string>
 </resources>

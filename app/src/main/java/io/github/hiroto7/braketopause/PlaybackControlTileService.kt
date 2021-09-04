@@ -58,6 +58,13 @@ class PlaybackControlTileService : TileService() {
 
     override fun onStartListening() {
         bindService(intent, connection, BIND_AUTO_CREATE)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val speedThreshold =
+                sharedPreferences.getInt(getString(R.string.speed_threshold_key), 8)
+            qsTile.subtitle = getString(R.string.toggle_at_n_kph, speedThreshold)
+            qsTile.updateTile()
+        }
     }
 
     override fun onStopListening() = unbindService(connection)

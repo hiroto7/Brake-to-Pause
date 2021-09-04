@@ -44,4 +44,5 @@
     <string name="speed_summary">Automatically pause playback of media such as music only when you slow down or are stopping.</string>
     <string name="notice">Make sure that you are manually playing the media beforehand. Do not manually pause it until you finish playback control.</string>
     <string name="location_permission_required">Location permission is required to get the device\'s movement speed.</string>
+    <string name="toggle_at_n_kph">Toggle at %d km/h</string>
 </resources>
