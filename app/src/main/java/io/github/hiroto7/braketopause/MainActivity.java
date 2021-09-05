@@ -173,12 +173,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void onStartButtonClicked(View v) {
         List<String> requestedPermissions = new ArrayList<>();
-        if (sharedPreferences.getBoolean(getString(R.string.location_key), true) &&
-                checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+        boolean locationPermissionGranted =
+                checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                        checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        if (sharedPreferences.getBoolean(getString(R.string.location_key), true) && !locationPermissionGranted) {
             requestedPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
             requestedPermissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         }
+
         if (sharedPreferences.getBoolean(getString(R.string.activity_recognition_key), true) &&
                 checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED &&
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

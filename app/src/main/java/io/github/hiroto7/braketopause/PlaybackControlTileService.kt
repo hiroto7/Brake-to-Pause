@@ -72,9 +72,12 @@ class PlaybackControlTileService : TileService() {
     override fun onClick() {
         when (qsTile.state) {
             Tile.STATE_INACTIVE -> {
+                val locationPermissionGranted =
+                    checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                            checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
                 if (sharedPreferences.getBoolean(getString(R.string.location_key), true) &&
-                    checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    !locationPermissionGranted ||
                     sharedPreferences.getBoolean(
                         getString(R.string.activity_recognition_key),
                         true

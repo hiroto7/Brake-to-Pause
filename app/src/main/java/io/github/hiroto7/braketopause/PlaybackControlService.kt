@@ -143,10 +143,10 @@ class PlaybackControlService : Service(), OnAudioFocusChangeListener {
     }
 
     private fun requestLocationUpdates() {
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
             checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
         ) {
-            return
+            throw SecurityException()
         }
         val locationRequest = LocationRequest.create()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
