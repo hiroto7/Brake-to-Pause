@@ -44,6 +44,6 @@
     <string name="play_at_high_speed">Playback is resumed when moving faster than the specified speed.</string>
     <string name="speed_summary">Automatically pause playback of media such as music only when you slow down or are stopping.</string>
     <string name="notice">Make sure that you are manually playing the media beforehand. Do not manually pause it until you finish playback control.</string>
-    <string name="location_permission_required">Allow access to the devic\'s precise location for detection of movement speed.</string>
+    <string name="location_permission_required">Allow access to the device\'s precise location for detection of movement speed.</string>
     <string name="toggle_at_n_kph">Toggle at %d km/h</string>
 </resources>
