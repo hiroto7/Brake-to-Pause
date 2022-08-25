@@ -126,7 +126,8 @@ public class MainActivity extends AppCompatActivity {
             numberPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
             numberPicker.setDisplayedValues(IntStream.rangeClosed(MIN_SPEED, MAX_SPEED).mapToObj(speed -> getString(R.string.n_kph, speed)).toArray(String[]::new));
 
-            new AlertDialog.Builder(this)
+            new MaterialAlertDialogBuilder(this)
+                    .setIcon(R.drawable.ic_baseline_speed_24)
                     .setTitle(R.string.speed_threshold_title)
                     .setView(numberPicker)
                     .setPositiveButton(android.R.string.ok, (dialog, which) -> sharedPreferences
@@ -169,6 +170,16 @@ public class MainActivity extends AppCompatActivity {
                             })
                     .show();
         });
+
+        binding.button.setOnClickListener(v ->
+                getSystemService(StatusBarManager.class).requestAddTileService(
+                        new ComponentName(this, PlaybackControlTileService.class),
+                        getString(R.string.playback_control),
+                        Icon.createWithResource(this, R.drawable.ic_baseline_pause_circle_outline_24),
+                        runnable -> {
+                        },
+                        integer -> {
+                        }));
     }
 
     private void onStopButtonClicked(View v) {

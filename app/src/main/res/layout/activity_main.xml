@@ -126,10 +126,7 @@
                     android:id="@+id/card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="@color/stroke_color"
-                    app:strokeWidth="1dp">
+                    android:layout_marginTop="32dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -137,7 +134,7 @@
                         android:animateLayoutChanges="true"
                         android:orientation="vertical">
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switch_activity_recognition"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -341,6 +338,13 @@
                     </LinearLayout>
 
                 </com.google.android.material.card.MaterialCardView>
+
+                <Button
+                    android:id="@+id/button"
+                    style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="クイック設定に追加" />
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>

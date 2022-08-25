@@ -38,7 +38,7 @@ class PlaybackControlService : Service(), OnAudioFocusChangeListener {
         override fun onLocationResult(locationResult: LocationResult) {
             super.onLocationResult(locationResult)
             val location = locationResult.lastLocation
-            if (!location.hasSpeed()) {
+            if (!location!!.hasSpeed()) {
                 return
             }
             val speedThresholdKph =
@@ -149,7 +149,7 @@ class PlaybackControlService : Service(), OnAudioFocusChangeListener {
             throw SecurityException()
         }
         val locationRequest = LocationRequest.create()
-            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
             .setInterval(1000)
         fusedLocationProviderClient.requestLocationUpdates(
             locationRequest,
@@ -211,7 +211,7 @@ class PlaybackControlService : Service(), OnAudioFocusChangeListener {
 
     fun stopMediaControl() {
         unregisterReceiver(stopReceiver)
-        stopForeground(true)
+        stopForeground(STOP_FOREGROUND_REMOVE)
         if (timerInProgress) {
             stopTimer()
         }
